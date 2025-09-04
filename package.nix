@@ -7,11 +7,11 @@
 }:
 
 let
-  version = "1.0.0";
+  version = "0.29.0";
   
   codexTarball = fetchurl {
-    url = "https://registry.npmjs.org/@openai/codex-cli/-/codex-cli-${version}.tgz";
-    sha256 = "0000000000000000000000000000000000000000000000000000";
+    url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}.tgz";
+    sha256 = "0iki3j90rciriwy6nbqfh8csdsdl2xx33l03qnga3p337pw73bv4";
   };
 in
 stdenv.mkDerivation rec {
@@ -54,7 +54,7 @@ stdenv.mkDerivation rec {
     export _CODEX_NPM_WRAPPER="$(mktemp -d)/npm"
     cat > "$_CODEX_NPM_WRAPPER" << 'NPM_EOF'
     #!${bash}/bin/bash
-    if [[ "$1" = "update" ]] || [[ "$1" = "outdated" ]] || [[ "$1" = "view" && "$2" =~ @openai/codex-cli ]]; then
+    if [[ "$1" = "update" ]] || [[ "$1" = "outdated" ]] || [[ "$1" = "view" && "$2" =~ @openai/codex ]]; then
         echo "Updates are managed through Nix. Current version: ${version}"
         exit 0
     fi
@@ -64,7 +64,7 @@ stdenv.mkDerivation rec {
     
     export PATH="$(dirname "$_CODEX_NPM_WRAPPER"):$PATH"
     
-    exec ${nodejs_22}/bin/node --no-warnings --enable-source-maps "$out/lib/node_modules/@openai/codex-cli/cli.js" "$@"
+    exec ${nodejs_22}/bin/node --no-warnings --enable-source-maps "$out/lib/node_modules/@openai/codex/cli.js" "$@"
     EOF
     chmod +x $out/bin/codex
     

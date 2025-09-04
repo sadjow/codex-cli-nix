@@ -14,7 +14,7 @@ PACKAGE_FILE="package.nix"
 echo "Updating to Codex CLI version $VERSION..."
 
 echo "Fetching SHA256 hash for version $VERSION..."
-URL="https://registry.npmjs.org/@openai/codex-cli/-/codex-cli-${VERSION}.tgz"
+URL="https://registry.npmjs.org/@openai/codex/-/codex-${VERSION}.tgz"
 HASH=$(nix-prefetch-url "$URL" 2>/dev/null || echo "")
 
 if [ -z "$HASH" ]; then

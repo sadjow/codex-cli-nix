@@ -33,7 +33,7 @@ jobs:
           LATEST_VERSION="${{ github.event.inputs.version }}"
         else
           # Get latest version from npm registry
-          LATEST_VERSION=$(curl -s https://registry.npmjs.org/@openai/codex-cli/latest | jq -r .version || echo "")
+          LATEST_VERSION=$(curl -s https://registry.npmjs.org/@openai/codex/latest | jq -r .version || echo "")
         fi
         
         if [ -z "$LATEST_VERSION" ]; then

@@ -115,7 +115,7 @@ nix develop
 1. Edit `version` in `package.nix`
 2. Update the SHA256 hash:
    ```bash
-   nix-prefetch-url https://registry.npmjs.org/@openai/codex-cli/-/codex-cli-VERSION.tgz
+   nix-prefetch-url https://registry.npmjs.org/@openai/codex/-/codex-VERSION.tgz
    ```
 3. Replace the hash in `package.nix`
 4. Test the build:
