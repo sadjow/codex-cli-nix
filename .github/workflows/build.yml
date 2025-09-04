@@ -24,9 +24,9 @@ jobs:
         name: codex-cli
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
         
-    - name: Build codex-cli
+    - name: Build codex
       run: |
-        nix build .#codex-cli
+        nix build .#codex
         nix build .#default
         
     - name: Push to Cachix

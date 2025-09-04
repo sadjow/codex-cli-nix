@@ -1,8 +1,8 @@
 # codex-nix
 
-A Nix flake for [OpenAI Codex CLI](https://developers.openai.com/codex/cli).
+A Nix flake for [OpenAI Codex](https://github.com/openai/codex).
 
-This flake packages the Codex CLI with its own Node.js runtime, ensuring consistent availability regardless of project-specific Node.js versions.
+This flake packages Codex with its own Node.js runtime, ensuring consistent availability regardless of project-specific Node.js versions.
 
 ## Quick Start
 
@@ -29,7 +29,7 @@ nix run github:yourusername/codex-nix
 nix profile install github:yourusername/codex-nix
 
 # Or use nix-env
-nix-env -iA codex-cli -f github:yourusername/codex-nix
+nix-env -iA codex -f github:yourusername/codex-nix
 ```
 
 ### Use in development shell
