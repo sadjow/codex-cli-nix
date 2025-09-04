@@ -28,8 +28,4 @@ jobs:
       run: |
         nix build .#codex
         nix build .#default
-        
-    - name: Push to Cachix
-      run: |
-        nix store sign --recursive --key-file ~/.config/cachix/signing.key ./result
-        nix copy --to "cachix://codex-cli" ./result
+        # The cachix-action will automatically push the built derivations
