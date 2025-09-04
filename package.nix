@@ -1,31 +1,30 @@
 { lib
-, buildNpmPackage
-, fetchFromGitHub
+, stdenv
+, fetchurl
 , nodejs_22
+, makeWrapper
 }:
 
-buildNpmPackage rec {
-  pname = "codex-cli";
+stdenv.mkDerivation rec {
+  pname = "codex";
   version = "0.29.0";
 
-  src = fetchFromGitHub {
-    owner = "openai";
-    repo = "codex";
-    rev = "rust-v${version}";
-    sha256 = "sha256-YCQfycmDPRxMAqo57tt/6IXkUn1JIPTzEHMNbt7m3w0=";
+  src = fetchurl {
+    url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}.tgz";
+    sha256 = "0iki3j90rciriwy6nbqfh8csdsdl2xx33l03qnga3p337pw73bv4";
   };
 
-  npmDepsHash = "sha256-mUx1zhX96OtEr7d1t0IXieUaoR6U+/PCnFtI958U47o=";
+  nativeBuildInputs = [ nodejs_22 makeWrapper ];
 
-  nodejs = nodejs_22;
-  
-  makeCacheWritable = true;
-  
-  # The npm package is in the codex-cli subdirectory
-  sourceRoot = "source/codex-cli";
-  
-  # Don't build, just install
-  dontNpmBuild = true;
+  installPhase = ''
+    mkdir -p $out/lib/node_modules/@openai/codex
+    cp -r . $out/lib/node_modules/@openai/codex
+    
+    mkdir -p $out/bin
+    makeWrapper ${nodejs_22}/bin/node $out/bin/codex \
+      --add-flags "$out/lib/node_modules/@openai/codex/bin/codex.js" \
+      --prefix NODE_PATH : "$out/lib/node_modules"
+  '';
 
   meta = with lib; {
     description = "OpenAI Codex CLI - AI coding assistant in your terminal";
