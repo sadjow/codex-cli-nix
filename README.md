@@ -145,7 +145,9 @@ The package automatically configures SSL certificates from the Nix store.
 
 ## License
 
-The Nix packaging is open source. OpenAI Codex CLI itself is proprietary software - see [OpenAI's terms](https://openai.com/terms) for details.
+This Nix packaging is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+OpenAI Codex CLI itself is licensed under the Apache-2.0 License - see [OpenAI's repository](https://github.com/openai/codex) for details.
 
 ## Contributing
 
