@@ -20,16 +20,16 @@ cachix use codex-cli
 
 ### Try without installing
 ```bash
-nix run github:yourusername/codex-nix
+nix run github:sadjow/codex-nix
 ```
 
 ### Install globally
 ```bash
-# Add to your system or home-manager configuration
-nix profile install github:yourusername/codex-nix
+# Using nix profile (recommended for Nix 2.4+)
+nix profile install github:sadjow/codex-nix
 
-# Or use nix-env
-nix-env -iA codex -f github:yourusername/codex-nix
+# Or using nix-env (legacy)
+nix-env -if github:sadjow/codex-nix
 ```
 
 ### Use in development shell
@@ -38,7 +38,7 @@ nix-env -iA codex -f github:yourusername/codex-nix
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    codex-nix.url = "github:yourusername/codex-nix";
+    codex-nix.url = "github:sadjow/codex-nix";
   };
 
   outputs = { self, nixpkgs, codex-nix }:
@@ -112,20 +112,29 @@ nix develop
 ```
 
 ### Update to new version
-1. Edit `version` in `package.nix`
-2. Update the SHA256 hash:
+
+The repository automatically checks for updates daily via GitHub Actions. 
+
+For manual updates:
+
+1. Check for new versions:
    ```bash
-   nix-prefetch-url https://registry.npmjs.org/@openai/codex/-/codex-VERSION.tgz
+   ./scripts/update.sh --check
    ```
-3. Replace the hash in `package.nix`
-4. Test the build:
+2. Update to latest version:
+   ```bash
+   # Get the latest version number from the check above
+   ./scripts/update.sh 0.30.0  # Replace with actual version
+   ```
+3. Test the build:
    ```bash
    nix build
+   ./result/bin/codex --version
    ```
 
 ### Push to Cachix manually
 ```bash
-nix build
+nix build .#codex
 cachix push codex-cli ./result
 ```
 

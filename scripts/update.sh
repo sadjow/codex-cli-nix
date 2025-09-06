@@ -2,14 +2,52 @@
 
 set -euo pipefail
 
-if [ $# -eq 0 ]; then
-    echo "Usage: $0 <version>"
-    echo "Example: $0 1.2.3"
+PACKAGE_FILE="package.nix"
+
+usage() {
+    echo "Usage: $0 [--check | <version>]"
+    echo ""
+    echo "Options:"
+    echo "  --check     Check if a new version is available"
+    echo "  <version>   Update to a specific version (e.g., 0.30.0)"
+    echo ""
+    echo "Examples:"
+    echo "  $0 --check"
+    echo "  $0 0.30.0"
     exit 1
+}
+
+get_current_version() {
+    grep 'version = ' "$PACKAGE_FILE" | cut -d'"' -f2
+}
+
+get_latest_version() {
+    curl -s https://registry.npmjs.org/@openai/codex/latest | \
+        sed -n 's/.*"version":"\([^"]*\)".*/\1/p'
+}
+
+if [ $# -eq 0 ]; then
+    usage
+fi
+
+if [ "$1" = "--check" ]; then
+    CURRENT_VERSION=$(get_current_version)
+    LATEST_VERSION=$(get_latest_version)
+    
+    echo "Current version: $CURRENT_VERSION"
+    echo "Latest version:  $LATEST_VERSION"
+    
+    if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
+        echo "✅ Already up to date!"
+        exit 0
+    else
+        echo "🆕 New version available: $LATEST_VERSION"
+        echo "Run './scripts/update.sh $LATEST_VERSION' to update"
+        exit 1
+    fi
 fi
 
 VERSION="$1"
-PACKAGE_FILE="package.nix"
 
 echo "Updating to Codex CLI version $VERSION..."
 
