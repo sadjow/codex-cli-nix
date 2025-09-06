@@ -1,14 +1,68 @@
 # codex-nix
 
-A Nix flake for [OpenAI Codex](https://github.com/openai/codex).
+Always up-to-date Nix package for [OpenAI Codex](https://github.com/openai/codex) - lightweight AI coding agent in your terminal.
 
-This flake packages Codex with its own Node.js runtime, ensuring consistent availability regardless of project-specific Node.js versions.
+**🚀 Automatically updated daily** to ensure you always have the latest Codex version.
+
+## Why this package?
+
+### Primary Goal: Always Up-to-Date Codex for Nix Users
+
+This flake provides immediate access to the latest OpenAI Codex versions with:
+
+1. **Daily Automated Updates**: New Codex versions available within 24 hours of release
+2. **Dedicated Maintenance**: Focused repository for quick fixes when Codex changes
+3. **Flake-First Design**: Direct flake usage with Cachix binary cache
+4. **Pre-built Binaries**: Multi-platform builds (Linux & macOS) cached for instant installation
+5. **Node.js 22 LTS**: Latest long-term support version for better performance and security
+
+### Why Not Just Use npm Global?
+
+While `npm install -g @openai/codex` works, it has critical limitations:
+- **Disappears on Node.js Switch**: When projects use different Node.js versions (via asdf/nvm), Codex becomes unavailable
+- **Must Reinstall Per Version**: Need to install Codex separately for each Node.js version
+- **Not Declarative**: Can't be managed in your Nix configuration
+- **Not Reproducible**: Different Node.js versions can cause inconsistencies
+- **Outside Nix**: Doesn't integrate with Nix's dependency management
+
+**Example Problem**: You're working on a legacy project that uses Node.js 16 via asdf. When you switch to that project, your globally installed Codex (from Node.js 22) disappears from your PATH. This flake solves this by bundling Node.js with Codex.
+
+### Comparison Table
+
+| Feature | npm global | This Flake |
+|---------|------------|------------|
+| **Latest Version** | ✅ Always | ✅ Daily checks |
+| **Node.js Version** | ⚠️ Per Node install | ✅ Node.js 22 LTS |
+| **Survives Node Switch** | ❌ Lost on switch | ✅ Always available |
+| **Binary Cache** | ❌ None | ✅ Cachix |
+| **Declarative Config** | ❌ None | ✅ Yes |
+| **Version Pinning** | ⚠️ Manual | ✅ Flake lock |
+| **Update Frequency** | ✅ Immediate | ✅ < 24 hours |
+| **Reproducible** | ❌ No | ✅ Yes |
+| **CI/CD Ready** | ❌ No | ✅ Yes |
 
 ## Quick Start
 
-### Using Binary Cache (Recommended)
+### Fastest Installation (Try it now!)
 
-Enable the Cachix binary cache to get pre-built binaries:
+```bash
+# Run Codex directly without installing
+nix run github:sadjow/codex-nix
+```
+
+### Install to Your System
+
+```bash
+# Using nix profile (recommended for Nix 2.4+)
+nix profile install github:sadjow/codex-nix
+
+# Or using nix-env (legacy)
+nix-env -if github:sadjow/codex-nix
+```
+
+### Optional: Enable Binary Cache for Faster Installation
+
+To download pre-built binaries instead of compiling:
 
 ```bash
 # Install cachix if you haven't already
@@ -18,23 +72,22 @@ nix-env -iA cachix -f https://cachix.org/api/v1/install
 cachix use codex-cli
 ```
 
-### Try without installing
-```bash
-nix run github:sadjow/codex-nix
-```
+Or add to your Nix configuration:
 
-### Install globally
-```bash
-# Using nix profile (recommended for Nix 2.4+)
-nix profile install github:sadjow/codex-nix
-
-# Or using nix-env (legacy)
-nix-env -if github:sadjow/codex-nix
-```
-
-### Use in development shell
 ```nix
-# In your flake.nix
+{
+  nix.settings = {
+    substituters = [ "https://codex-cli.cachix.org" ];
+    trusted-public-keys = [ "codex-cli.cachix.org-1:YOUR_PUBLIC_KEY_HERE" ];
+  };
+}
+```
+
+## Using with Nix Flakes
+
+### In your flake.nix
+
+```nix
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -55,16 +108,6 @@ nix-env -if github:sadjow/codex-nix
     };
 }
 ```
-
-## Features
-
-- **Bundled Node.js Runtime**: Ships with Node.js v22 LTS for maximum compatibility
-- **No Global Dependencies**: Works independently of system Node.js installations
-- **Version Pinning**: Ensures consistent behavior across different environments
-- **Offline Installation**: Pre-fetches npm packages for reliable builds
-- **Auto-update Protection**: Prevents unexpected updates that might break your workflow
-
-## Configuration
 
 ### Using with NixOS
 
@@ -92,28 +135,68 @@ Add to your Home Manager configuration:
 }
 ```
 
+## Technical Details
+
+### Package Architecture
+
+Our custom `package.nix` implementation:
+
+1. **Pre-fetches npm tarball**: Uses Nix's Fixed Output Derivation (FOD) for reproducible, offline builds
+2. **Bundles Node.js 22 LTS**: Ensures consistent runtime environment across all systems
+3. **Custom wrapper script**: Handles PATH, environment variables, and Codex-specific requirements
+4. **Multi-platform builds**: CI builds and caches for both Linux and macOS
+5. **Sandbox compatible**: All network fetching happens during the FOD phase, not build phase
+
+### Runtime Environment
+
+Currently using **Node.js 22 LTS** because:
+- Long-term stability and support until April 2027
+- Better performance than older Node.js versions
+- Latest LTS with all security updates
+- Consistent behavior across all platforms
+
+### Features
+
+- **Bundled Node.js Runtime**: Ships with Node.js v22 LTS for maximum compatibility
+- **No Global Dependencies**: Works independently of system Node.js installations
+- **Version Pinning**: Ensures consistent behavior across different environments
+- **Offline Installation**: Pre-fetches npm packages for reliable builds
+- **Auto-update Protection**: Prevents unexpected updates that might break your workflow
+- **Cross-platform Support**: Pre-built binaries for Linux and macOS
+
 ## Development
 
-### Setup Cachix Authentication
-
-To push builds to Cachix, you'll need to:
-
-1. Get your auth token from [Cachix](https://app.cachix.org/cache/codex-cli#pull)
-2. Add it as a GitHub secret named `CACHIX_AUTH_TOKEN` in your repository settings
-
-### Build locally
 ```bash
+# Clone the repository
+git clone https://github.com/sadjow/codex-nix
+cd codex-nix
+
+# Build locally
 nix build
-```
 
-### Enter development shell
-```bash
+# Test the build
+./result/bin/codex --version
+
+# Enter development shell
 nix develop
 ```
 
-### Update to new version
+## Updating Codex Version
 
-The repository automatically checks for updates daily via GitHub Actions. 
+### Automated Updates
+
+This repository uses GitHub Actions to automatically check for new Codex versions daily. When a new version is detected:
+
+1. A pull request is automatically created with the version update
+2. The tarball hash is automatically calculated
+3. Tests run on both Linux and macOS to verify the build
+4. The PR auto-merges if all checks pass
+
+The automated update workflow runs:
+- Daily at midnight UTC
+- On manual trigger via GitHub Actions UI
+
+### Manual Updates
 
 For manual updates:
 
@@ -147,10 +230,25 @@ export PATH="$HOME/.nix-profile/bin:$PATH"
 ```
 
 ### Permission issues on macOS
-The wrapper script sets a consistent executable path to prevent macOS permission resets.
+
+On macOS, Codex may ask for permissions after each Nix update because the binary path changes. To fix this:
+
+1. Create a stable symlink: 
+   ```bash
+   mkdir -p ~/.local/bin
+   ln -sf $(which codex) ~/.local/bin/codex
+   ```
+2. Add `~/.local/bin` to your PATH
+3. Always run `codex` from `~/.local/bin/codex`
+
+The wrapper script sets a consistent executable path to help prevent macOS permission resets.
 
 ### SSL certificate errors
 The package automatically configures SSL certificates from the Nix store.
+
+## Repository Settings
+
+This repository requires specific GitHub settings for automated updates. See [Repository Settings Documentation](.github/REPOSITORY_SETTINGS.md) for configuration details.
 
 ## License
 
