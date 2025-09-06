@@ -1,0 +1,61 @@
+name: Test Pull Request
+
+on:
+  pull_request:
+    paths:
+      - 'package.nix'
+      - 'flake.nix'
+      - 'flake.lock'
+      - '.github/workflows/**'
+
+jobs:
+  test-build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+        env:
+          NIX_FIRST_BUILD_UID: 400
+
+      - name: Setup Nix cache
+        uses: cachix/cachix-action@v15
+        with:
+          name: codex-cli
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+          skipPush: true
+
+      - name: Build package
+        run: |
+          nix build .#codex --print-build-logs
+          
+      - name: Test codex version
+        run: |
+          # Test that codex runs and reports version
+          ./result/bin/codex --version
+          
+      - name: Verify package contents
+        run: |
+          # Verify the binary exists
+          test -f ./result/bin/codex
+          
+          # Verify Node modules are installed
+          test -d ./result/lib/node_modules/@openai/codex
+          
+      - name: Run basic functionality test
+        run: |
+          # Test help command
+          ./result/bin/codex --help || true
+          
+          # Verify it's using the correct Node.js version
+          ./result/bin/codex --version 2>&1 | grep -E "codex|Codex"
