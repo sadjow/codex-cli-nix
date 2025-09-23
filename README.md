@@ -2,7 +2,7 @@
 
 Always up-to-date Nix package for [OpenAI Codex](https://github.com/openai/codex) - lightweight AI coding agent in your terminal.
 
-**🚀 Automatically updated daily** to ensure you always have the latest Codex version.
+**🚀 Automatically updated hourly** to ensure you always have the latest Codex version.
 
 ## Why this package?
 
@@ -10,7 +10,7 @@ Always up-to-date Nix package for [OpenAI Codex](https://github.com/openai/codex
 
 This flake provides immediate access to the latest OpenAI Codex versions with:
 
-1. **Daily Automated Updates**: New Codex versions available within 24 hours of release
+1. **Hourly Automated Updates**: New Codex versions available within 1 hour of release
 2. **Dedicated Maintenance**: Focused repository for quick fixes when Codex changes
 3. **Flake-First Design**: Direct flake usage with Cachix binary cache
 4. **Pre-built Binaries**: Multi-platform builds (Linux & macOS) cached for instant installation
@@ -31,13 +31,13 @@ While `npm install -g @openai/codex` works, it has critical limitations:
 
 | Feature | npm global | This Flake |
 |---------|------------|------------|
-| **Latest Version** | ✅ Always | ✅ Daily checks |
+| **Latest Version** | ✅ Always | ✅ Hourly checks |
 | **Node.js Version** | ⚠️ Per Node install | ✅ Node.js 22 LTS |
 | **Survives Node Switch** | ❌ Lost on switch | ✅ Always available |
 | **Binary Cache** | ❌ None | ✅ Cachix |
 | **Declarative Config** | ❌ None | ✅ Yes |
 | **Version Pinning** | ⚠️ Manual | ✅ Flake lock |
-| **Update Frequency** | ✅ Immediate | ✅ < 24 hours |
+| **Update Frequency** | ✅ Immediate | ✅ <= 1 hour |
 | **Reproducible** | ❌ No | ✅ Yes |
 | **CI/CD Ready** | ❌ No | ✅ Yes |
 
@@ -185,7 +185,7 @@ nix develop
 
 ### Automated Updates
 
-This repository uses GitHub Actions to automatically check for new Codex versions daily. When a new version is detected:
+This repository uses GitHub Actions to automatically check for new Codex versions hourly. When a new version is detected:
 
 1. A pull request is automatically created with the version update
 2. The tarball hash is automatically calculated
@@ -193,7 +193,7 @@ This repository uses GitHub Actions to automatically check for new Codex version
 4. The PR auto-merges if all checks pass
 
 The automated update workflow runs:
-- Daily at midnight UTC
+- Every hour (on the hour) UTC
 - On manual trigger via GitHub Actions UI
 
 ### Manual Updates

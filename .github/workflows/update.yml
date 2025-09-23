@@ -2,7 +2,7 @@ name: Check for Updates
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Daily at midnight
+    - cron: '0 * * * *' # Hourly
   workflow_dispatch:
     inputs:
       version:
