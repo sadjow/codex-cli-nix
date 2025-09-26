@@ -7,11 +7,11 @@
 
 stdenv.mkDerivation rec {
   pname = "codex";
-  version = "0.41.0";
+  version = "0.42.0";
 
   src = fetchurl {
     url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}.tgz";
-    sha256 = "0fbzpig31m618b06n43bbp1d0amf56zmlw23gxiycs5d2y0h5f5q";
+    sha256 = "0lzckwjnwl3q006p7zqllmxxjyjkvcvsc05np8ipk8f44ycxyh48";
   };
 
   nativeBuildInputs = [ nodejs_22 makeWrapper ];
