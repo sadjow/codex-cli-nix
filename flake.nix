@@ -1,5 +1,5 @@
 {
-  description = "Nix package for OpenAI Codex CLI - AI coding assistant in your terminal";
+  description = "Nix flake for OpenAI Codex CLI - AI coding assistant in your terminal";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";

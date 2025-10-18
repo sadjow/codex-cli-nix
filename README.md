@@ -1,4 +1,4 @@
-# codex-nix
+# codex-cli-nix
 
 Always up-to-date Nix package for [OpenAI Codex](https://github.com/openai/codex) - lightweight AI coding agent in your terminal.
 
@@ -47,17 +47,17 @@ While `npm install -g @openai/codex` works, it has critical limitations:
 
 ```bash
 # Run Codex directly without installing
-nix run github:sadjow/codex-nix
+nix run github:sadjow/codex-cli-nix
 ```
 
 ### Install to Your System
 
 ```bash
 # Using nix profile (recommended for Nix 2.4+)
-nix profile install github:sadjow/codex-nix
+nix profile install github:sadjow/codex-cli-nix
 
 # Or using nix-env (legacy)
-nix-env -if github:sadjow/codex-nix
+nix-env -if github:sadjow/codex-cli-nix
 ```
 
 ### Optional: Enable Binary Cache for Faster Installation
@@ -91,10 +91,10 @@ Or add to your Nix configuration:
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    codex-nix.url = "github:sadjow/codex-nix";
+    codex-cli-nix.url = "github:sadjow/codex-cli-nix";
   };
 
-  outputs = { self, nixpkgs, codex-nix }:
+  outputs = { self, nixpkgs, codex-cli-nix }:
     let
       system = "x86_64-linux"; # or your system
       pkgs = nixpkgs.legacyPackages.${system};
@@ -102,7 +102,7 @@ Or add to your Nix configuration:
     {
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = [
-          codex-nix.packages.${system}.default
+          codex-cli-nix.packages.${system}.default
         ];
       };
     };
@@ -117,7 +117,7 @@ Add to your system configuration:
 { inputs, pkgs, ... }:
 {
   environment.systemPackages = [
-    inputs.codex-nix.packages.${pkgs.system}.default
+    inputs.codex-cli-nix.packages.${pkgs.system}.default
   ];
 }
 ```
@@ -130,7 +130,7 @@ Add to your Home Manager configuration:
 { inputs, pkgs, ... }:
 {
   home.packages = [
-    inputs.codex-nix.packages.${pkgs.system}.default
+    inputs.codex-cli-nix.packages.${pkgs.system}.default
   ];
 }
 ```
@@ -168,8 +168,8 @@ Currently using **Node.js 22 LTS** because:
 
 ```bash
 # Clone the repository
-git clone https://github.com/sadjow/codex-nix
-cd codex-nix
+git clone https://github.com/sadjow/codex-cli-nix
+cd codex-cli-nix
 
 # Build locally
 nix build
