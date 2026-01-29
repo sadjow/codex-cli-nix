@@ -4,17 +4,20 @@ Always up-to-date Nix package for [OpenAI Codex](https://github.com/openai/codex
 
 **🚀 Automatically updated hourly** to ensure you always have the latest Codex version.
 
+**🦀 Now using native Rust binaries** - no Node.js dependency required!
+
 ## Why this package?
 
 ### Primary Goal: Always Up-to-Date Codex for Nix Users
 
 This flake provides immediate access to the latest OpenAI Codex versions with:
 
-1. **Hourly Automated Updates**: New Codex versions available within 1 hour of release
-2. **Dedicated Maintenance**: Focused repository for quick fixes when Codex changes
-3. **Flake-First Design**: Direct flake usage with Cachix binary cache
-4. **Pre-built Binaries**: Multi-platform builds (Linux & macOS) cached for instant installation
-5. **Node.js 22 LTS**: Latest long-term support version for better performance and security
+1. **Native Rust Binary**: Self-contained binary, no runtime dependencies
+2. **Hourly Automated Updates**: New Codex versions available within 1 hour of release
+3. **Dedicated Maintenance**: Focused repository for quick fixes when Codex changes
+4. **Flake-First Design**: Direct flake usage with Cachix binary cache
+5. **Pre-built Binaries**: Multi-platform builds (Linux & macOS) cached for instant installation
+6. **Node.js Runtime Option**: Alternative `codex-node` package for those who prefer Node.js
 
 ### Why Not Just Use npm Global?
 
@@ -32,7 +35,7 @@ While `npm install -g @openai/codex` works, it has critical limitations:
 | Feature | npm global | This Flake |
 |---------|------------|------------|
 | **Latest Version** | ✅ Always | ✅ Hourly checks |
-| **Node.js Version** | ⚠️ Per Node install | ✅ Node.js 22 LTS |
+| **Native Binary** | ❌ Requires Node.js | ✅ Self-contained |
 | **Survives Node Switch** | ❌ Lost on switch | ✅ Always available |
 | **Binary Cache** | ❌ None | ✅ Cachix |
 | **Declarative Config** | ❌ None | ✅ Yes |
@@ -46,18 +49,21 @@ While `npm install -g @openai/codex` works, it has critical limitations:
 ### Fastest Installation (Try it now!)
 
 ```bash
-# Run Codex directly without installing
+# Run native Codex directly without installing (recommended)
 nix run github:sadjow/codex-cli-nix
+
+# Or run the Node.js version
+nix run github:sadjow/codex-cli-nix#codex-node
 ```
 
 ### Install to Your System
 
 ```bash
-# Using nix profile (recommended for Nix 2.4+)
+# Install native binary (recommended)
 nix profile install github:sadjow/codex-cli-nix
 
-# Or using nix-env (legacy)
-nix-env -if github:sadjow/codex-cli-nix
+# Or install the Node.js version
+nix profile install github:sadjow/codex-cli-nix#codex-node
 ```
 
 ### Optional: Enable Binary Cache for Faster Installation
@@ -139,30 +145,26 @@ Add to your Home Manager configuration:
 
 ### Package Architecture
 
-Our custom `package.nix` implementation:
+Two package variants are available:
 
-1. **Pre-fetches npm tarball**: Uses Nix's Fixed Output Derivation (FOD) for reproducible, offline builds
-2. **Bundles Node.js 22 LTS**: Ensures consistent runtime environment across all systems
-3. **Custom wrapper script**: Handles PATH, environment variables, and Codex-specific requirements
-4. **Multi-platform builds**: CI builds and caches for both Linux and macOS
-5. **Sandbox compatible**: All network fetching happens during the FOD phase, not build phase
+**`codex` (default, native binary)**
+- Pre-built Rust binary from OpenAI's GitHub releases
+- Self-contained, no runtime dependencies
+- Fastest startup time
+- Supported platforms: `x86_64-linux`, `aarch64-linux`, `x86_64-darwin`, `aarch64-darwin`
 
-### Runtime Environment
-
-Currently using **Node.js 22 LTS** because:
-- Long-term stability and support until April 2027
-- Better performance than older Node.js versions
-- Latest LTS with all security updates
-- Consistent behavior across all platforms
+**`codex-node` (alternative, Node.js runtime)**
+- Traditional npm package with bundled Node.js 22 LTS
+- Useful for debugging or if native binary has issues
+- Works on all platforms supported by Node.js
 
 ### Features
 
-- **Bundled Node.js Runtime**: Ships with Node.js v22 LTS for maximum compatibility
-- **No Global Dependencies**: Works independently of system Node.js installations
+- **Native Rust Binary**: Self-contained binary with no runtime dependencies (default)
+- **Node.js Alternative**: Optional Node.js runtime for compatibility
 - **Version Pinning**: Ensures consistent behavior across different environments
-- **Offline Installation**: Pre-fetches npm packages for reliable builds
 - **Auto-update Protection**: Prevents unexpected updates that might break your workflow
-- **Cross-platform Support**: Pre-built binaries for Linux and macOS
+- **Cross-platform Support**: Pre-built binaries for Linux and macOS (x86_64 and ARM64)
 
 ## Development
 
@@ -217,8 +219,11 @@ For manual updates:
 
 ### Push to Cachix manually
 ```bash
-nix build .#codex
-cachix push codex-cli ./result
+# Push native binary
+nix build .#codex && cachix push codex-cli ./result
+
+# Push Node.js version
+nix build .#codex-node && cachix push codex-cli ./result
 ```
 
 ## Troubleshooting
