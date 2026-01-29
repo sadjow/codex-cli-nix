@@ -7,6 +7,7 @@
 , patchelf
 , gnutar
 , gzip
+, openssl
 , runtime ? "native"
 , nativeBinName ? "codex"
 , nodeBinName ? "codex-node"
@@ -50,7 +51,7 @@ let
   runtimeConfig = {
     native = {
       nativeBuildInputs = [ gnutar gzip ] ++ lib.optionals stdenv.isLinux [ patchelf ];
-      buildInputs = [];
+      buildInputs = lib.optionals stdenv.isLinux [ openssl ];
       description = "OpenAI Codex CLI (Native Binary) - AI coding assistant in your terminal";
       binName = nativeBinName;
     };
@@ -87,7 +88,10 @@ stdenv.mkDerivation rec {
     chmod u+w,+x build/codex
 
     ${lib.optionalString stdenv.isLinux ''
-    patchelf --set-interpreter "$(cat ${stdenv.cc}/nix-support/dynamic-linker)" build/codex
+    patchelf \
+      --set-interpreter "$(cat ${stdenv.cc}/nix-support/dynamic-linker)" \
+      --set-rpath "${lib.makeLibraryPath [ openssl ]}" \
+      build/codex
     ''}
 
     runHook postBuild
