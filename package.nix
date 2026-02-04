@@ -14,7 +14,7 @@
 }:
 
 let
-  version = "0.95.0";
+  version = "0.96.0";
 
   platformMap = {
     "aarch64-darwin" = "aarch64-apple-darwin";
@@ -26,10 +26,10 @@ let
   platform = platformMap.${stdenv.hostPlatform.system} or null;
 
   nativeHashes = {
-    "aarch64-apple-darwin" = "0w1z14aazxj3hckblj1bfz853as67qbnd5vc9070jhii8zi7252f";
-    "x86_64-apple-darwin" = "08bsj9c9jkyn9knb1vsnr9r6152z2mq219wdfns1hcgms634rv81";
-    "x86_64-unknown-linux-gnu" = "05r5y4665ykwri386ykp7h9l6i3hnfxizf49l3r7vzk9bfliiwhx";
-    "aarch64-unknown-linux-gnu" = "1vclyxizsyvj7h4j0pim6p49jsz96p1fgnqmaz4mzns9igcmb130";
+    "aarch64-apple-darwin" = "0vf7xvylpbm5h00qivsnbdasn88rix1q7026hq5nqhn1lp18mzb3";
+    "x86_64-apple-darwin" = "00dyvy6mkbz7pi39g4infsxk2i7g740dzmlgq22gl0302h19yyxx";
+    "x86_64-unknown-linux-gnu" = "05rk9igkv9hcyamirl3aq3w3vvm5fni93nxp3kipkw4q8g3izy0k";
+    "aarch64-unknown-linux-gnu" = "1cha047x4l9gqw8vc6fgh1zk25irin1b4zdwqvc9cvswf5iyw6pj";
   };
 
   nativeBinaryUrl = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-${platform}.tar.gz";
@@ -44,7 +44,7 @@ let
   npmTarball = if runtime == "node" then
     fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}.tgz";
-      sha256 = "1hdzcfm7zvg28ny46zvhafgf2agwfnb7vn4qh6diy87ammk53rc6";
+      sha256 = "022hmavb2wh5g6gicmfnzr3svgz4d9j2ahcdq966ps83p55w1b42";
     }
   else null;
 
