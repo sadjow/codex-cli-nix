@@ -46,16 +46,9 @@ jobs:
           
       - name: Verify package contents
         run: |
-          # Verify the binary exists
           test -f ./result/bin/codex
-          
-          # Verify Node modules are installed
-          test -d ./result/lib/node_modules/@openai/codex
-          
+
       - name: Run basic functionality test
         run: |
-          # Test help command
           ./result/bin/codex --help || true
-          
-          # Verify it's using the correct Node.js version
           ./result/bin/codex --version 2>&1 | grep -E "codex|Codex"
