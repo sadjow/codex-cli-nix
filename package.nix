@@ -8,6 +8,7 @@
 , gnutar
 , gzip
 , openssl
+, libcap
 , runtime ? "native"
 , nativeBinName ? "codex"
 , nodeBinName ? "codex-node"
@@ -51,7 +52,7 @@ let
   runtimeConfig = {
     native = {
       nativeBuildInputs = [ gnutar gzip ] ++ lib.optionals stdenv.isLinux [ patchelf ];
-      buildInputs = lib.optionals stdenv.isLinux [ openssl ];
+      buildInputs = lib.optionals stdenv.isLinux [ openssl libcap ];
       description = "OpenAI Codex CLI (Native Binary) - AI coding assistant in your terminal";
       binName = nativeBinName;
     };
@@ -90,7 +91,7 @@ stdenv.mkDerivation rec {
     ${lib.optionalString stdenv.isLinux ''
     patchelf \
       --set-interpreter "$(cat ${stdenv.cc}/nix-support/dynamic-linker)" \
-      --set-rpath "${lib.makeLibraryPath [ openssl ]}" \
+      --set-rpath "${lib.makeLibraryPath [ openssl libcap ]}" \
       build/codex
     ''}
 
