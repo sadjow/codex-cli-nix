@@ -25,13 +25,28 @@ let
     "aarch64-linux" = "aarch64-unknown-linux-gnu";
   };
 
+  nodePlatformMap = {
+    "aarch64-darwin" = "darwin-arm64";
+    "x86_64-darwin" = "darwin-x64";
+    "x86_64-linux" = "linux-x64";
+    "aarch64-linux" = "linux-arm64";
+  };
+
   platform = platformMap.${stdenv.hostPlatform.system} or null;
+  nodePlatform = nodePlatformMap.${stdenv.hostPlatform.system} or null;
 
   nativeHashes = {
     "aarch64-apple-darwin" = "0kqpwld83jlvfrya5wmxj1ifgdaz6ras206rw4qvga5ir74kcggd";
     "x86_64-apple-darwin" = "1kppqdp4iyy849hc5ipi6hj9fpdcpmjfj7rq7w1kxlw5k5rznf23";
     "x86_64-unknown-linux-gnu" = "1nxyxnza9hfp9xa2f4mjy1nx4h67s8n9n1j0scha428wfj57z66c";
     "aarch64-unknown-linux-gnu" = "0h2w4xryg04396imvp2an1zn5d06fklq1n3nani98x6vq81m5s4b";
+  };
+
+  nodeOptionalDepHashes = {
+    "darwin-arm64" = "1x3mzkpbsn5wiiby2kbbsc9a8xhmcqbf99sws1yks87dp57gnj2q";
+    "darwin-x64" = "18fvvfc1ggfxz6k55mn5m8dz4wwl4kmb65qrbrzk3m9zmbnjf020";
+    "linux-x64" = "0ncj370zxbz2nka09a778d49d5nc3kdy8vqdip2dja360pf9882b";
+    "linux-arm64" = "111akazjyhsi304xr3zhs1n1f86xz44wscvbw84p2hn1qvr77mva";
   };
 
   nativeBinaryUrl = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-${platform}.tar.gz";
@@ -47,6 +62,13 @@ let
     fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}.tgz";
       sha256 = "1m15s77dby6ipw1sx8x449h8laak8i7qc7r5bpcwy4vad1y35mhz";
+    }
+  else null;
+
+  nodeOptionalDep = if runtime == "node" && nodePlatform != null then
+    fetchurl {
+      url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}-${nodePlatform}.tgz";
+      sha256 = nodeOptionalDepHashes.${nodePlatform};
     }
   else null;
 
@@ -108,6 +130,11 @@ stdenv.mkDerivation rec {
     mkdir -p $out/lib/node_modules/@openai
     tar -xzf ${npmTarball} -C $out/lib/node_modules/@openai
     mv $out/lib/node_modules/@openai/package $out/lib/node_modules/@openai/codex
+
+    ${lib.optionalString (nodeOptionalDep != null) ''
+    tar -xzf ${nodeOptionalDep} -C $out/lib/node_modules/@openai
+    mv $out/lib/node_modules/@openai/package $out/lib/node_modules/@openai/codex-${nodePlatform}
+    ''}
 
     runHook postBuild
   '';

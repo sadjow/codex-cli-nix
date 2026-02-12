@@ -12,6 +12,7 @@ readonly NPM_PACKAGE_NAME="@openai/codex"
 readonly GITHUB_RELEASE_BASE="https://github.com/${GITHUB_REPO}/releases/download"
 
 readonly NATIVE_PLATFORMS=("aarch64-apple-darwin" "x86_64-apple-darwin" "x86_64-unknown-linux-gnu" "aarch64-unknown-linux-gnu")
+readonly NODE_PLATFORMS=("darwin-arm64" "darwin-x64" "linux-x64" "linux-arm64")
 
 log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
@@ -44,6 +45,16 @@ fetch_native_hash() {
 fetch_npm_hash() {
     local version="$1"
     local url="${NPM_REGISTRY_URL}/${NPM_PACKAGE_NAME}/-/codex-${version}.tgz"
+
+    local hash
+    hash=$(nix-prefetch-url "$url" 2>/dev/null | tail -1)
+    echo "$hash" | tr -d '\n'
+}
+
+fetch_node_optional_dep_hash() {
+    local version="$1"
+    local platform="$2"
+    local url="${NPM_REGISTRY_URL}/${NPM_PACKAGE_NAME}/-/codex-${version}-${platform}.tgz"
 
     local hash
     hash=$(nix-prefetch-url "$url" 2>/dev/null | tail -1)
@@ -90,6 +101,23 @@ update_native_hash() {
     mv "$temp_file" package.nix
 }
 
+update_node_optional_dep_hash() {
+    local platform="$1"
+    local hash="$2"
+    local temp_file
+    temp_file=$(mktemp)
+
+    awk -v platform="$platform" -v hash="$hash" '
+        /nodeOptionalDepHashes = \{/ { in_block=1 }
+        in_block && $0 ~ "\"" platform "\"" {
+            sub(/= "[^"]*"/, "= \"" hash "\"")
+        }
+        in_block && /\};/ { in_block=0 }
+        { print }
+    ' package.nix > "$temp_file"
+    mv "$temp_file" package.nix
+}
+
 cleanup_backup_files() {
     rm -f package.nix.bak
 }
@@ -125,6 +153,20 @@ update_to_version() {
     fi
     log_info "NPM tarball hash: $npm_hash"
     update_npm_hash "$npm_hash"
+
+    log_info "Fetching node platform-specific dependency hashes..."
+    for node_platform in "${NODE_PLATFORMS[@]}"; do
+        log_info "  Fetching hash for $node_platform..."
+        local node_dep_hash
+        node_dep_hash=$(fetch_node_optional_dep_hash "$new_version" "$node_platform")
+        if [ -z "$node_dep_hash" ]; then
+            log_error "Failed to fetch node optional dep hash for $node_platform"
+            mv package.nix.bak package.nix
+            exit 1
+        fi
+        log_info "  $node_platform: $node_dep_hash"
+        update_node_optional_dep_hash "$node_platform" "$node_dep_hash"
+    done
 
     cleanup_backup_files
 
