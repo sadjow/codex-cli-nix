@@ -16,7 +16,7 @@
 }:
 
 let
-  version = "0.99.0";
+  version = "0.100.0";
 
   platformMap = {
     "aarch64-darwin" = "aarch64-apple-darwin";
@@ -36,17 +36,17 @@ let
   nodePlatform = nodePlatformMap.${stdenv.hostPlatform.system} or null;
 
   nativeHashes = {
-    "aarch64-apple-darwin" = "0kqpwld83jlvfrya5wmxj1ifgdaz6ras206rw4qvga5ir74kcggd";
-    "x86_64-apple-darwin" = "1kppqdp4iyy849hc5ipi6hj9fpdcpmjfj7rq7w1kxlw5k5rznf23";
-    "x86_64-unknown-linux-gnu" = "1nxyxnza9hfp9xa2f4mjy1nx4h67s8n9n1j0scha428wfj57z66c";
-    "aarch64-unknown-linux-gnu" = "0h2w4xryg04396imvp2an1zn5d06fklq1n3nani98x6vq81m5s4b";
+    "aarch64-apple-darwin" = "1b8yvzxxxbaz3bxsjqcdlck6swy0xqa8b686rllfwp44xanydbfv";
+    "x86_64-apple-darwin" = "0sqhxh27f59nd4a6d6kxmfba3akj7j7csjpl9rxw0wxk8s13nbla";
+    "x86_64-unknown-linux-gnu" = "128qcjfliprdg6zjdqy2843mfl0ffygk0aqsjyds5v6nysy1avc3";
+    "aarch64-unknown-linux-gnu" = "0kigb5d69fw1s604mf3yjzf4wzdfkvn15nk5wmh2qlsj186k4hdz";
   };
 
   nodeOptionalDepHashes = {
-    "darwin-arm64" = "1x3mzkpbsn5wiiby2kbbsc9a8xhmcqbf99sws1yks87dp57gnj2q";
-    "darwin-x64" = "18fvvfc1ggfxz6k55mn5m8dz4wwl4kmb65qrbrzk3m9zmbnjf020";
-    "linux-x64" = "0ncj370zxbz2nka09a778d49d5nc3kdy8vqdip2dja360pf9882b";
-    "linux-arm64" = "111akazjyhsi304xr3zhs1n1f86xz44wscvbw84p2hn1qvr77mva";
+    "darwin-arm64" = "0818cmgw70k51njbmkx5921rf16xwi3liw99yqg35jvcxl90z1za";
+    "darwin-x64" = "17qpmyj14fkrxzg1n3aqlskzlc5z69qvink5f4bxgmvyaaix7fx1";
+    "linux-x64" = "14b6ahxcwv0nqq6kxka4f4m0wzlknz1bvp9xjx5j1w7vrg13qkv7";
+    "linux-arm64" = "1qwsc64z3c2apdi9qagr8dcchgbbqqvdlcdk9ypkchlw4vghjhvw";
   };
 
   nativeBinaryUrl = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-${platform}.tar.gz";
@@ -61,7 +61,7 @@ let
   npmTarball = if runtime == "node" then
     fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}.tgz";
-      sha256 = "1m15s77dby6ipw1sx8x449h8laak8i7qc7r5bpcwy4vad1y35mhz";
+      sha256 = "1xbhfzys3nljq3m0p9v1kqy14g79fn30hdggpm0jb91bj2cdkvaa";
     }
   else null;
 
