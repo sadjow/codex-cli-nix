@@ -148,7 +148,7 @@ stdenv.mkDerivation rec {
     cp build/codex $out/bin/codex-raw
     chmod +x $out/bin/codex-raw
     makeWrapper "$out/bin/codex-raw" "$out/bin/${selected.binName}" \
-      --set CODEX_EXECUTABLE_PATH '$HOME/.local/bin/${selected.binName}' \
+      --run 'export CODEX_EXECUTABLE_PATH="$HOME/.local/bin/${selected.binName}"' \
       --set DISABLE_AUTOUPDATER 1 \
       ${lib.optionalString stdenv.isLinux ''--prefix PATH : "${linuxRuntimePath}"''}
     runHook postInstall
@@ -160,7 +160,7 @@ stdenv.mkDerivation rec {
       --add-flags --no-warnings \
       --add-flags "$out/lib/node_modules/@openai/codex/bin/codex.js" \
       --set NODE_PATH "$out/lib/node_modules" \
-      --set CODEX_EXECUTABLE_PATH '$HOME/.local/bin/${selected.binName}' \
+      --run 'export CODEX_EXECUTABLE_PATH="$HOME/.local/bin/${selected.binName}"' \
       --set DISABLE_AUTOUPDATER 1 \
       ${lib.optionalString stdenv.isLinux ''--prefix PATH : "${linuxRuntimePath}"''}
     runHook postInstall
