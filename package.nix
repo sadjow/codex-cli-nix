@@ -3,13 +3,14 @@
 , fetchurl
 , nodejs_22
 , cacert
-, bash
+, makeWrapper
 , patchelf
 , gnutar
 , gzip
 , openssl
 , libcap
 , libz
+, bubblewrap
 , runtime ? "native"
 , nativeBinName ? "codex"
 , nodeBinName ? "codex-node"
@@ -74,13 +75,13 @@ let
 
   runtimeConfig = {
     native = {
-      nativeBuildInputs = [ gnutar gzip ] ++ lib.optionals stdenv.isLinux [ patchelf ];
+      nativeBuildInputs = [ gnutar gzip makeWrapper ] ++ lib.optionals stdenv.isLinux [ patchelf ];
       buildInputs = lib.optionals stdenv.isLinux [ openssl libcap libz ];
       description = "OpenAI Codex CLI (Native Binary) - AI coding assistant in your terminal";
       binName = nativeBinName;
     };
     node = {
-      nativeBuildInputs = [ nodejs_22 cacert ];
+      nativeBuildInputs = [ nodejs_22 cacert makeWrapper ];
       buildInputs = [];
       description = "OpenAI Codex CLI (Node.js) - AI coding assistant in your terminal";
       binName = nodeBinName;
@@ -88,6 +89,7 @@ let
   };
 
   selected = runtimeConfig.${runtime};
+  linuxRuntimePath = lib.makeBinPath (lib.optionals stdenv.isLinux [ bubblewrap ]);
 in
 assert runtime == "native" -> platform != null ||
   throw "Native runtime not supported on ${stdenv.hostPlatform.system}. Supported: aarch64-darwin, x86_64-darwin, x86_64-linux, aarch64-linux";
@@ -145,34 +147,22 @@ stdenv.mkDerivation rec {
 
     cp build/codex $out/bin/codex-raw
     chmod +x $out/bin/codex-raw
-
-    cat > $out/bin/${selected.binName} << 'WRAPPER_EOF'
-#!${bash}/bin/bash
-export CODEX_EXECUTABLE_PATH="$HOME/.local/bin/${selected.binName}"
-export DISABLE_AUTOUPDATER=1
-exec "$out/bin/codex-raw" "$@"
-WRAPPER_EOF
-    chmod +x $out/bin/${selected.binName}
-
-    substituteInPlace $out/bin/${selected.binName} \
-      --replace-fail '$out' "$out"
+    makeWrapper "$out/bin/codex-raw" "$out/bin/${selected.binName}" \
+      --run 'export CODEX_EXECUTABLE_PATH="$HOME/.local/bin/${selected.binName}"' \
+      --set DISABLE_AUTOUPDATER 1 \
+      ${lib.optionalString stdenv.isLinux ''--prefix PATH : "${linuxRuntimePath}"''}
     runHook postInstall
   '' else ''
     runHook preInstall
     mkdir -p $out/bin
 
-    cat > $out/bin/${selected.binName} << 'WRAPPER_EOF'
-#!${bash}/bin/bash
-export NODE_PATH="$out/lib/node_modules"
-export CODEX_EXECUTABLE_PATH="$HOME/.local/bin/${selected.binName}"
-export DISABLE_AUTOUPDATER=1
-
-exec ${nodejs_22}/bin/node --no-warnings "$out/lib/node_modules/@openai/codex/bin/codex.js" "$@"
-WRAPPER_EOF
-    chmod +x $out/bin/${selected.binName}
-
-    substituteInPlace $out/bin/${selected.binName} \
-      --replace-fail '$out' "$out"
+    makeWrapper ${nodejs_22}/bin/node "$out/bin/${selected.binName}" \
+      --add-flags --no-warnings \
+      --add-flags "$out/lib/node_modules/@openai/codex/bin/codex.js" \
+      --set NODE_PATH "$out/lib/node_modules" \
+      --run 'export CODEX_EXECUTABLE_PATH="$HOME/.local/bin/${selected.binName}"' \
+      --set DISABLE_AUTOUPDATER 1 \
+      ${lib.optionalString stdenv.isLinux ''--prefix PATH : "${linuxRuntimePath}"''}
     runHook postInstall
   '';
 
