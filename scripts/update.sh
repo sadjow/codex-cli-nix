@@ -54,7 +54,7 @@ fetch_npm_hash() {
 fetch_node_optional_dep_hash() {
     local version="$1"
     local platform="$2"
-    local url="${NPM_REGISTRY_URL}/${NPM_PACKAGE_NAME}/-/codex-${version}-${platform}.tgz"
+    local url="${GITHUB_RELEASE_BASE}/rust-v${version}/codex-npm-${platform}-${version}.tgz"
 
     local hash
     hash=$(nix-prefetch-url "$url" 2>/dev/null | tail -1)

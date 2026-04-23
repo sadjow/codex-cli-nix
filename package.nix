@@ -68,7 +68,7 @@ let
 
   nodeOptionalDep = if runtime == "node" && nodePlatform != null then
     fetchurl {
-      url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}-${nodePlatform}.tgz";
+      url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-npm-${nodePlatform}-${version}.tgz";
       sha256 = nodeOptionalDepHashes.${nodePlatform};
     }
   else null;
