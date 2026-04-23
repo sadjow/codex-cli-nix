@@ -17,7 +17,7 @@
 }:
 
 let
-  version = "0.123.0";
+  version = "0.124.0";
 
   platformMap = {
     "aarch64-darwin" = "aarch64-apple-darwin";
@@ -37,17 +37,17 @@ let
   nodePlatform = nodePlatformMap.${stdenv.hostPlatform.system} or null;
 
   nativeHashes = {
-    "aarch64-apple-darwin" = "0virdpfbip0v8pmwcsizr218k61mv0bknmld5avf7awk4jw5hmq3";
-    "x86_64-apple-darwin" = "1rrdzyva4sw6spb8j0mfcpz6d2466bax6a4sm3cqlri2p5jm0kkq";
-    "x86_64-unknown-linux-gnu" = "1m25ynj2xn25camwrizzfc0nzjfx30pi0kihc8x338wgs9ngk1l7";
-    "aarch64-unknown-linux-gnu" = "19bd4vn2ss49y2g4hvr5vxz0ardbi6c8dbdbmky33d3y6j4xs6rr";
+    "aarch64-apple-darwin" = "1ki9wpmn2f9zwlb9klnwsq2rpbql24gip9dr4azah73r8i4p9s3i";
+    "x86_64-apple-darwin" = "061ww08dd5vmq5hamwr395fv96lpdrzs86wd98f475rdj7dh08xg";
+    "x86_64-unknown-linux-gnu" = "02bbzh4mjyix0ifh8xg3pjg9sw56v0hxj8wk2pnwadjfs999sq8d";
+    "aarch64-unknown-linux-gnu" = "0ydmdjj6q2qnsqmipy7rnl367aij3m8d7db4d2r9gby5m9nlhrcp";
   };
 
   nodeOptionalDepHashes = {
-    "darwin-arm64" = "11l706kpxlqwg7qryyh4pfnqqqgk6sbfa29q5f55bs7303gidr89";
-    "darwin-x64" = "177xxkfp0vvr2xlgk6bqm6hkx6qkib1mqvlg4w2ihq3fc7q1zh5f";
-    "linux-x64" = "1wxzx9ginr8xkcf64bj1gfnscwwi0wny259s8jqyfqd0i60r657l";
-    "linux-arm64" = "0817nla0hhc7h2ax9nw9v30j8421pjrmxcl61376nvm3yjk5vh6a";
+    "darwin-arm64" = "0nivpc52sdx27hm42i79nc2l1amg03ynqxcsy5zh14hmbwxna8c2";
+    "darwin-x64" = "1nikj6gv8qmfk45rsdmkgq46fmjkr75z00yi5icmian9dzs0r77b";
+    "linux-x64" = "1p2g4imkpk6abz0lphal2xrlzha54ais2vbx54vpfq0fv5x67qmf";
+    "linux-arm64" = "1gk5bnx2ypqvrz0mq9linbs2y718zn1g30lrsf2x1vsdnnlf8my0";
   };
 
   nativeBinaryUrl = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-${platform}.tar.gz";
@@ -62,13 +62,13 @@ let
   npmTarball = if runtime == "node" then
     fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}.tgz";
-      sha256 = "1277sapx064khadbhks6yspd2kkzk71bxwyhb9dikv66njmlkdc5";
+      sha256 = "1wj8b1sprq6cx4l2z2plnp5xji7bmmmwi1rmhd3f2vz34x0bwcnm";
     }
   else null;
 
   nodeOptionalDep = if runtime == "node" && nodePlatform != null then
     fetchurl {
-      url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}-${nodePlatform}.tgz";
+      url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-npm-${nodePlatform}-${version}.tgz";
       sha256 = nodeOptionalDepHashes.${nodePlatform};
     }
   else null;
