@@ -4,7 +4,6 @@
 , nodejs_22
 , cacert
 , makeWrapper
-, patchelf
 , gnutar
 , gzip
 , openssl
@@ -17,13 +16,13 @@
 }:
 
 let
-  version = "0.125.0";
+  version = "0.128.0";
 
   platformMap = {
     "aarch64-darwin" = "aarch64-apple-darwin";
     "x86_64-darwin" = "x86_64-apple-darwin";
-    "x86_64-linux" = "x86_64-unknown-linux-gnu";
-    "aarch64-linux" = "aarch64-unknown-linux-gnu";
+    "x86_64-linux" = "x86_64-unknown-linux-musl";
+    "aarch64-linux" = "aarch64-unknown-linux-musl";
   };
 
   nodePlatformMap = {
@@ -37,17 +36,17 @@ let
   nodePlatform = nodePlatformMap.${stdenv.hostPlatform.system} or null;
 
   nativeHashes = {
-    "aarch64-apple-darwin" = "17vlrcwg8s1jqp7wjzcyf14i7jskgj8a3v9bnr4x6fcnrg06v4ka";
-    "x86_64-apple-darwin" = "12f0nlgm0xdn8s42cylr2inqwdqdzxdsgglnaqilr08m9mc1jq5l";
-    "x86_64-unknown-linux-gnu" = "1gnl9kskdq1ggmqwgkqvdim12fz8sjmphj7wy6lg6cdbp2ww0asj";
-    "aarch64-unknown-linux-gnu" = "1rjnc6hbcshm864rkcw0k51afi4kvh56b4473dpnay3mzlkna1rd";
+    "aarch64-apple-darwin" = "1mgkm93msm1x938zqpqzyrb7pfihrny03106ih629349i8p20s7h";
+    "x86_64-apple-darwin" = "0qd94nh36z1m4vfwv0d622khfwy3xqy4fg0p5908hzpp24h8v867";
+    "x86_64-unknown-linux-musl" = "0fp243xswx5fsgh00g8h7fji2dljprzh1jip8hil62wc27k8asw8";
+    "aarch64-unknown-linux-musl" = "1l6blqxsl00ashvfzqx73gil1vm7z4dv9z5hzfzggsjg63av8q9i";
   };
 
   nodeOptionalDepHashes = {
-    "darwin-arm64" = "1082035aark2zp93s1n9g4f6ibn9dgwc541f9i5ffk0hdcrs6a77";
-    "darwin-x64" = "1hbhgz711ici4papy1sv6y6f79djyy0jvw4nbsqflqgs53rpa0ih";
-    "linux-x64" = "1zs370wp6jdm2smlwy0ljd270yrhh893mrw9izr5hh4wf4rlf7r1";
-    "linux-arm64" = "0yxicdlcd3y3i1jnif3z4vclnh2v0gkpwzwm1clhax1samn9cp7g";
+    "darwin-arm64" = "16wx35sd6lvyy337gxa5rvbs2q0sd077a4ihs5y333g1gaarsj95";
+    "darwin-x64" = "07y25x9n5xsy8jm5qsmqyb9i7359yqspddpd7ncw4hy2f0yglkqz";
+    "linux-x64" = "0y2khg9nd9g9rqfbyg7h4qrni2d72m6c48ndg5w3xxpjd97hn5i1";
+    "linux-arm64" = "1bv5aylp4218n6194vgf6532y2ff42vwln3x6fxhjk549dlzm1x3";
   };
 
   nativeBinaryUrl = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-${platform}.tar.gz";
@@ -62,7 +61,7 @@ let
   npmTarball = if runtime == "node" then
     fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}.tgz";
-      sha256 = "16q1aifcrnaxlqi50pagh70apkxxria85xrmq8lbfcsm9mznjvvx";
+      sha256 = "1y7r47p3nhf1kxlrnvjhrrnnv12r9p2jix0p771s4zlkfs1x6vs9";
     }
   else null;
 
@@ -75,7 +74,7 @@ let
 
   runtimeConfig = {
     native = {
-      nativeBuildInputs = [ gnutar gzip makeWrapper ] ++ lib.optionals stdenv.isLinux [ patchelf ];
+      nativeBuildInputs = [ gnutar gzip makeWrapper ];
       buildInputs = lib.optionals stdenv.isLinux [ openssl libcap libz ];
       description = "OpenAI Codex CLI (Native Binary) - AI coding assistant in your terminal";
       binName = nativeBinName;
@@ -112,13 +111,6 @@ stdenv.mkDerivation rec {
     tar -xzf ${nativeBinary} -C build
     mv build/codex-${platform} build/codex
     chmod u+w,+x build/codex
-
-    ${lib.optionalString stdenv.isLinux ''
-    patchelf \
-      --set-interpreter "$(cat ${stdenv.cc}/nix-support/dynamic-linker)" \
-      --set-rpath "${lib.makeLibraryPath [ openssl libcap libz ]}" \
-      build/codex
-    ''}
 
     runHook postBuild
   '' else ''
