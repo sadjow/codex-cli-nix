@@ -11,7 +11,7 @@ readonly NPM_REGISTRY_URL="https://registry.npmjs.org"
 readonly NPM_PACKAGE_NAME="@openai/codex"
 readonly GITHUB_RELEASE_BASE="https://github.com/${GITHUB_REPO}/releases/download"
 
-readonly NATIVE_PLATFORMS=("aarch64-apple-darwin" "x86_64-apple-darwin" "x86_64-unknown-linux-gnu" "aarch64-unknown-linux-gnu")
+readonly NATIVE_PLATFORMS=("aarch64-apple-darwin" "x86_64-apple-darwin" "x86_64-unknown-linux-musl" "aarch64-unknown-linux-musl")
 readonly NODE_PLATFORMS=("darwin-arm64" "darwin-x64" "linux-x64" "linux-arm64")
 
 log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
