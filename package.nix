@@ -4,6 +4,7 @@
 , nodejs_22
 , cacert
 , makeWrapper
+, installShellFiles
 , gnutar
 , gzip
 , openssl
@@ -102,7 +103,8 @@ stdenv.mkDerivation rec {
   dontPatchELF = runtime == "native";
   dontStrip = runtime == "native";
 
-  nativeBuildInputs = selected.nativeBuildInputs;
+  nativeBuildInputs = selected.nativeBuildInputs
+    ++ lib.optionals (selected.binName == "codex") [ installShellFiles ];
   buildInputs = selected.buildInputs;
 
   buildPhase = if runtime == "native" then ''
@@ -156,6 +158,13 @@ stdenv.mkDerivation rec {
       --set DISABLE_AUTOUPDATER 1 \
       ${lib.optionalString stdenv.isLinux ''--prefix PATH : "${linuxRuntimePath}"''}
     runHook postInstall
+  '';
+
+  postInstall = lib.optionalString (selected.binName == "codex") ''
+    installShellCompletion --cmd codex \
+      --bash <("$out/bin/${selected.binName}" completion bash) \
+      --fish <("$out/bin/${selected.binName}" completion fish) \
+      --zsh <("$out/bin/${selected.binName}" completion zsh)
   '';
 
   meta = with lib; {
