@@ -42,6 +42,13 @@ let
     "aarch64-unknown-linux-musl" = "0lbbrkn857nk5zlzy3lp271yfbpcqdx5zfzm8g3mbddxa1wlmi67";
   };
 
+  nativeCodeModeHostHashes = {
+    "aarch64-apple-darwin" = "0im248hb4vb7wd0k4fkg87chszsac022ijy7d49m9zmy60j2iybc";
+    "x86_64-apple-darwin" = "07rdypzbqvmq9z6mx6q61jf00n4f6xyp3nj7s2f0vy9pjwfv5lkg";
+    "x86_64-unknown-linux-musl" = "0gcr30mf1mgfwqfpiqhmvjb0qyq23vwgfgjii7s2nz4lb9fcdn96";
+    "aarch64-unknown-linux-musl" = "0sniqrhxcff3rghai6nsx59fm5zil4i56hk7wiqkmhhsysamdcia";
+  };
+
   nodeOptionalDepHashes = {
     "darwin-arm64" = "03aqv0b95jpf7g7dkr2jb79qwk2bs08vyn6hb1y5jr840zf4yx6b";
     "darwin-x64" = "186xjvpf8n56ngcbnqqdga80kgh1kgqbh498gxbzx200vn7ibn7x";
@@ -55,6 +62,13 @@ let
     fetchurl {
       url = nativeBinaryUrl;
       sha256 = nativeHashes.${platform};
+    }
+  else null;
+
+  nativeCodeModeHost = if runtime == "native" && platform != null then
+    fetchurl {
+      url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-code-mode-host-${platform}.tar.gz";
+      sha256 = nativeCodeModeHostHashes.${platform};
     }
   else null;
 
@@ -109,8 +123,11 @@ stdenv.mkDerivation rec {
     runHook preBuild
     mkdir -p build
     tar -xzf ${nativeBinary} -C build
+    tar -xzf ${nativeCodeModeHost} -C build
     mv build/codex-${platform} build/codex
+    mv build/codex-code-mode-host-${platform} build/codex-code-mode-host
     chmod u+w,+x build/codex
+    chmod u+w,+x build/codex-code-mode-host
 
     runHook postBuild
   '' else ''
@@ -139,6 +156,8 @@ stdenv.mkDerivation rec {
 
     cp build/codex $out/bin/codex-raw
     chmod +x $out/bin/codex-raw
+    cp build/codex-code-mode-host $out/bin/codex-code-mode-host
+    chmod +x $out/bin/codex-code-mode-host
     makeWrapper "$out/bin/codex-raw" "$out/bin/${selected.binName}" \
       --run 'export CODEX_EXECUTABLE_PATH="$HOME/.local/bin/${selected.binName}"' \
       --set DISABLE_AUTOUPDATER 1 \

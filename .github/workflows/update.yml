@@ -80,8 +80,8 @@ jobs:
 
           ### Changes
           - Updated `version` in `package.nix`
-          - Updated native binary hashes for all platforms
-          - Updated npm tarball hash
+          - Updated native Codex and Code Mode host hashes for all platforms
+          - Updated npm and Node platform dependency hashes
 
           ### Checklist
           - [ ] Build passes
