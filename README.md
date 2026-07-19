@@ -60,11 +60,14 @@ nix run github:sadjow/codex-cli-nix#codex-node
 
 ```bash
 # Install native binary (recommended)
-nix profile install github:sadjow/codex-cli-nix
+nix profile add github:sadjow/codex-cli-nix
 
 # Or install the Node.js version
-nix profile install github:sadjow/codex-cli-nix#codex-node
+nix profile add github:sadjow/codex-cli-nix#codex-node
 ```
+
+On Nix versions before 2.30 that do not provide `nix profile add`, use
+`nix profile install` instead.
 
 ### Optional: Enable Binary Cache for Faster Installation
 
