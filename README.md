@@ -66,6 +66,9 @@ nix profile add github:sadjow/codex-cli-nix
 nix profile add github:sadjow/codex-cli-nix#codex-node
 ```
 
+On Nix versions before 2.30 that do not provide `nix profile add`, use
+`nix profile install` instead.
+
 ### Optional: Enable Binary Cache for Faster Installation
 
 To download pre-built binaries instead of compiling:
