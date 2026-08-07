@@ -18,7 +18,7 @@
 }:
 
 let
-  version = "0.146.1";
+  version = "0.147.0";
 
   platformMap = {
     "aarch64-darwin" = "aarch64-apple-darwin";
@@ -38,27 +38,27 @@ let
   nodePlatform = nodePlatformMap.${stdenv.hostPlatform.system} or null;
 
   nativeHashes = {
-    "aarch64-apple-darwin" = "088qg2yqsrwqph33298axfqn891cnr6q3mvaqibdajyjf2r5wz1k";
-    "x86_64-apple-darwin" = "0l0z5x6kymgxcq6lkdawzp03ph2i6b033rflzqb5ynar4v16wpwp";
-    "x86_64-unknown-linux-musl" = "1b14312rpfjgic5xdkiaqcfv9y49q3gklybh6nrnzgqjxid10n7m";
-    "aarch64-unknown-linux-musl" = "0hsdwczvk0zx52yn2hlff6a6gv6m84wk3k10www21l3bggp6bph5";
+    "aarch64-apple-darwin" = "0n23vhh3nw6v2cg4p2wc9mz1fmsw1vccmddkyk0b0w9az60lp63m";
+    "x86_64-apple-darwin" = "1qklammvqxfsc3k2fss5z2ifk011iya6975qq8vwqr413pvq5rrn";
+    "x86_64-unknown-linux-musl" = "0djcaj89csnxjyxwgy08ws8labnip9pfsjajzgq0fkl3fgky4ih2";
+    "aarch64-unknown-linux-musl" = "144bndc8zacczpwvc2wn3llb256nx1k3n20x9f5spcb6ys07qrzb";
   };
 
   # codex >= 0.143 spawns a separate `codex-code-mode-host` binary (found
   # next to the running executable) when "code mode" is enabled. Shipped as its
   # own release asset, so the native build must fetch and install it too.
   codeModeHostHashes = {
-    "aarch64-apple-darwin" = "0px9jqazhim6c7qp89gjrmfd3zbd6h614gzjd4m8ah57ppiqqkzf";
-    "x86_64-apple-darwin" = "0pirca8lq5fnz4nf0bgpc2s9q5xk3yffrdbccwmf2fwbfi5q0bfp";
-    "x86_64-unknown-linux-musl" = "0928ajjrbknvmskndnh6m93k0p8ygn2jc8g5910bmd2381c8rkv0";
-    "aarch64-unknown-linux-musl" = "0faj867830hxx8fpfngf65dncmm8sazzir4j2s6iamxcqab2v6ij";
+    "aarch64-apple-darwin" = "0ppvvn9fwqp0d77fsaqnbiga3ysglfjyxzmpsc4434dzhxhvzkan";
+    "x86_64-apple-darwin" = "12n4zcklj2jvhshv7n8psip7zc861f5ih5n8g47sdpp4im8a0cbi";
+    "x86_64-unknown-linux-musl" = "0mj3vnhrgyxp71wqi0x22y32wnyv4iv5z2dmrngyqqw3mkxasih1";
+    "aarch64-unknown-linux-musl" = "0z1w9nssbr95wa3slwq5dn1s8gbfz2v3375gg380xcsdxacgzm6z";
   };
 
   nodeOptionalDepHashes = {
-    "darwin-arm64" = "1z03mlinbv7vd9k1lryj04xd94pyqj6m7p4skcxy71hbq6shjibr";
-    "darwin-x64" = "00zaw0a5mj8ng71qgiq94bqnxs4ixrqfqhxcxgjbh2mmbxwzqq7a";
-    "linux-x64" = "0scsnk1w3z8m883p0lj59bq57l37kb39szfqnvqhvzbyh4s2dd6s";
-    "linux-arm64" = "04268ga408c3ks9bapd500zy7mig41d514ygnrqfzshp5klnzfcm";
+    "darwin-arm64" = "1lzlfbcxdyjh6m90in2x5n06q7hw4dkwf1r34bg03zy6i3by4ga9";
+    "darwin-x64" = "1dh8psc94za3y6dmsk8fzc87lg2jfd7d63qam7d11hfhrpg7kka3";
+    "linux-x64" = "16hka2r9hmc2vxmj6b61h18az69cxgpm3mawj0qlqzi9z0678sf9";
+    "linux-arm64" = "0il5j5gn5sh405blwdmbgyn5ihhg5xhpq3hb0zx8sxlp0l0by2ad";
   };
 
   nativeBinaryUrl = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-${platform}.tar.gz";
@@ -80,7 +80,7 @@ let
   npmTarball = if runtime == "node" then
     fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}.tgz";
-      sha256 = "1j7g79xh0zgyh9dsacxpayl73gwg8cpl1rm9dz02ym1d3709mal3";
+      sha256 = "0mbj5r1qblx6k35ch2y1sjxwx5cmaw6c831x11qyl1wzppa4z2yj";
     }
   else null;
 
