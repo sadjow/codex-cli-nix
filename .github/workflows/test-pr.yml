@@ -48,6 +48,9 @@ jobs:
         run: |
           test -f ./result/bin/codex
           test -x ./result/bin/codex-code-mode-host
+          test -x ./result/libexec/codex
+          test -x ./result/libexec/codex-code-mode-host
+          test -L ./result/bin/codex-code-mode-host
 
       - name: Run basic functionality test
         run: |

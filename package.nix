@@ -163,13 +163,16 @@ stdenv.mkDerivation rec {
 
   installPhase = if runtime == "native" then ''
     runHook preInstall
-    mkdir -p $out/bin
+    mkdir -p $out/bin $out/libexec
 
-    cp build/codex $out/bin/codex-raw
-    chmod +x $out/bin/codex-raw
-    cp build/codex-code-mode-host $out/bin/codex-code-mode-host
-    chmod +x $out/bin/codex-code-mode-host
-    makeWrapper "$out/bin/codex-raw" "$out/bin/${selected.binName}" \
+    # Keep the wrapped executable's basename canonical for process discovery.
+    # The code-mode host must remain next to the executable Codex actually runs.
+    cp build/codex "$out/libexec/${selected.binName}"
+    chmod +x "$out/libexec/${selected.binName}"
+    cp build/codex-code-mode-host $out/libexec/codex-code-mode-host
+    chmod +x $out/libexec/codex-code-mode-host
+    ln -s ../libexec/codex-code-mode-host $out/bin/codex-code-mode-host
+    makeWrapper "$out/libexec/${selected.binName}" "$out/bin/${selected.binName}" \
       --run 'export CODEX_EXECUTABLE_PATH="$HOME/.local/bin/${selected.binName}"' \
       --set DISABLE_AUTOUPDATER 1 \
       ${lib.optionalString stdenv.isLinux ''--prefix PATH : "${linuxRuntimePath}"''}
