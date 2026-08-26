@@ -94,7 +94,7 @@ let
   runtimeConfig = {
     native = {
       nativeBuildInputs = [ gnutar gzip makeWrapper ];
-      buildInputs = lib.optionals stdenv.isLinux [ openssl libcap libz ];
+      buildInputs = lib.optionals stdenv.hostPlatform.isLinux [ openssl libcap libz ];
       description = "OpenAI Codex CLI (Native Binary) - AI coding assistant in your terminal";
       binName = nativeBinName;
     };
@@ -107,7 +107,7 @@ let
   };
 
   selected = runtimeConfig.${runtime};
-  linuxRuntimePath = lib.makeBinPath (lib.optionals stdenv.isLinux [ bubblewrap ]);
+  linuxRuntimePath = lib.makeBinPath (lib.optionals stdenv.hostPlatform.isLinux [ bubblewrap ]);
   generateShellCompletions =
     installShellCompletions
     && runtime == "native"
@@ -175,7 +175,7 @@ stdenv.mkDerivation rec {
     makeWrapper "$out/libexec/${selected.binName}" "$out/bin/${selected.binName}" \
       --run 'export CODEX_EXECUTABLE_PATH="$HOME/.local/bin/${selected.binName}"' \
       --set DISABLE_AUTOUPDATER 1 \
-      ${lib.optionalString stdenv.isLinux ''--prefix PATH : "${linuxRuntimePath}"''}
+      ${lib.optionalString stdenv.hostPlatform.isLinux ''--prefix PATH : "${linuxRuntimePath}"''}
     runHook postInstall
   '' else ''
     runHook preInstall
@@ -187,7 +187,7 @@ stdenv.mkDerivation rec {
       --set NODE_PATH "$out/lib/node_modules" \
       --run 'export CODEX_EXECUTABLE_PATH="$HOME/.local/bin/${selected.binName}"' \
       --set DISABLE_AUTOUPDATER 1 \
-      ${lib.optionalString stdenv.isLinux ''--prefix PATH : "${linuxRuntimePath}"''}
+      ${lib.optionalString stdenv.hostPlatform.isLinux ''--prefix PATH : "${linuxRuntimePath}"''}
     runHook postInstall
   '';
 
