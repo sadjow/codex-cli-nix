@@ -35,7 +35,7 @@ get_latest_version() {
 fetch_native_hash() {
     local version="$1"
     local platform="$2"
-    local url="${GITHUB_RELEASE_BASE}/rust-v${version}/codex-${platform}.tar.gz"
+    local url="${GITHUB_RELEASE_BASE}/rust-v${version}/codex-${platform}.zst"
 
     local hash
     hash=$(nix-prefetch-url "$url" 2>/dev/null | tail -1)
@@ -45,7 +45,7 @@ fetch_native_hash() {
 fetch_code_mode_host_hash() {
     local version="$1"
     local platform="$2"
-    local url="${GITHUB_RELEASE_BASE}/rust-v${version}/codex-code-mode-host-${platform}.tar.gz"
+    local url="${GITHUB_RELEASE_BASE}/rust-v${version}/codex-code-mode-host-${platform}.zst"
 
     local hash
     hash=$(nix-prefetch-url "$url" 2>/dev/null | tail -1)
