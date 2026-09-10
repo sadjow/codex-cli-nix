@@ -6,8 +6,7 @@
 , makeWrapper
 , installShellFiles
 , installShellCompletions ? stdenv.buildPlatform.canExecute stdenv.hostPlatform
-, gnutar
-, gzip
+, zstd
 , openssl
 , libcap
 , libz
@@ -38,30 +37,30 @@ let
   nodePlatform = nodePlatformMap.${stdenv.hostPlatform.system} or null;
 
   nativeHashes = {
-    "aarch64-apple-darwin" = "1mzrrvmiczna671smflqjiy90s8s682g7vsgw29b3hcilnh10hrl";
-    "x86_64-apple-darwin" = "1rx630z7l0yfwqznvg3rcahrqpcb0g02bh94lj9v84zqv0vwh68j";
-    "x86_64-unknown-linux-musl" = "00kzq045shxniy3djd6nxp4xnj7gvs89xviibwpj93xfjwjqpqfp";
-    "aarch64-unknown-linux-musl" = "09rwld7m42nc4skmg9qzh9047cq6vdd2x31krnyi6hl06bglhfsq";
+    "aarch64-apple-darwin" = "sha256-NsWJXVmjdajY6KkFhggOUsH16kIuyn/vrd71/b5SVH8=";
+    "x86_64-apple-darwin" = "sha256-7xeTqgVWwPap31etrqS+O8UhVrWUoPgv9nyvtGW0d8U=";
+    "x86_64-unknown-linux-musl" = "sha256-vq5qSDBd9v0hyLOUiakA96mjVheTPuawl1vP21tUKSU=";
+    "aarch64-unknown-linux-musl" = "sha256-nWFedFoM3UOvSiYF4vvRK7MU022GbizDaLrW9t5lXcM=";
   };
 
   # codex >= 0.143 spawns a separate `codex-code-mode-host` binary (found
   # next to the running executable) when "code mode" is enabled. Shipped as its
   # own release asset, so the native build must fetch and install it too.
   codeModeHostHashes = {
-    "aarch64-apple-darwin" = "1bbgr1fn8hs1xwac4c3gk00xpl81wbcdgrsjj18sx6555shf43jh";
-    "x86_64-apple-darwin" = "1zl76fwxpr1i673sd8wzzdxk24kjg7z9qn3av314vx4iwm0n3ym0";
-    "x86_64-unknown-linux-musl" = "1xq1mx0xd1jb4nhk64yx98ikmiv1vvvpsrvmw76sfv9wlb6gg3d6";
-    "aarch64-unknown-linux-musl" = "1ynbdnv347kipngxnswwfkywfxjz9aavy499wfbb88i05hqgmbi0";
+    "aarch64-apple-darwin" = "sha256-dXDi1vtPXeVr1/P339Z4Pm3UNGWqUMAO2nKCKUBQuTs=";
+    "x86_64-apple-darwin" = "sha256-y+qv3kWHnqMLTT2fGyxgJttJWNnJntZ82zSMtzVdP38=";
+    "x86_64-unknown-linux-musl" = "sha256-ZE/EprgWL43eqE7i40YcMey6de5GDu2msrdnq91m58c=";
+    "aarch64-unknown-linux-musl" = "sha256-/U86GHAS1WXtjb89tlr68Hv+9ctIDYky4voY1k8QzTM=";
   };
 
   nodeOptionalDepHashes = {
-    "darwin-arm64" = "1qdd3kdag99kbmc08ndllhnx988sbbif6cvj7jcmjsiig4nnd61a";
-    "darwin-x64" = "1qfw6njlgfqa4r6rda86pb67kwx4mcfjalj2v7237i2k7i9r7i4j";
-    "linux-x64" = "0aw3nfbgnc59zv9is640796lh5jzmlmc2mprwxg6hcb0ksj86z72";
-    "linux-arm64" = "092v202ch55na34rvavcx70jrhm8bd83a38ynxwzzsmzcigmncd2";
+    "darwin-arm64" = "sha256-KphmLXkxalmZPHIz4+JaGqHULaS0WQRYXTOlp9ocreE=";
+    "darwin-x64" = "sha256-ksSTUzxTxDPE2UJSJR2rpPN5zLoGqZZNJgq7R6U13OE=";
+    "linux-x64" = "sha256-4nyDpJ5gMWhe5/lWwSqtXxZITTqAGB3T/qkw+5azgys=";
+    "linux-arm64" = "sha256-ojFbX2S/6v95tx4NNVBbqMIswelsq53JULYUyAQQWyQ=";
   };
 
-  nativeBinaryUrl = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-${platform}.tar.gz";
+  nativeBinaryUrl = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-${platform}.zst";
 
   nativeBinary = if runtime == "native" && platform != null then
     fetchurl {
@@ -72,7 +71,7 @@ let
 
   codeModeHost = if runtime == "native" && platform != null then
     fetchurl {
-      url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-code-mode-host-${platform}.tar.gz";
+      url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-code-mode-host-${platform}.zst";
       sha256 = codeModeHostHashes.${platform};
     }
   else null;
@@ -80,7 +79,7 @@ let
   npmTarball = if runtime == "node" then
     fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}.tgz";
-      sha256 = "16w5ymlpr1mahm5fgm3w64l8lw2qmwi6ms85hcsxshjhwva661l7";
+      sha256 = "sha256-hwZj1OZQQt01gwXpaiKvWHCKKDF81OdKhaqGfGn1hZs=";
     }
   else null;
 
@@ -93,7 +92,7 @@ let
 
   runtimeConfig = {
     native = {
-      nativeBuildInputs = [ gnutar gzip makeWrapper ];
+      nativeBuildInputs = [ zstd makeWrapper ];
       buildInputs = lib.optionals stdenv.hostPlatform.isLinux [ openssl libcap libz ];
       description = "OpenAI Codex CLI (Native Binary) - AI coding assistant in your terminal";
       binName = nativeBinName;
@@ -132,11 +131,11 @@ stdenv.mkDerivation rec {
   buildPhase = if runtime == "native" then ''
     runHook preBuild
     mkdir -p build
-    tar -xzf ${nativeBinary} -C build
+    zstd -d ${nativeBinary} -o build/codex-${platform}
     mv build/codex-${platform} build/codex
     chmod u+w,+x build/codex
 
-    tar -xzf ${codeModeHost} -C build
+    zstd -d ${codeModeHost} -o build/codex-code-mode-host-${platform}
     mv build/codex-code-mode-host-${platform} build/codex-code-mode-host
     chmod u+w,+x build/codex-code-mode-host
 

@@ -35,20 +35,20 @@ get_latest_version() {
 fetch_native_hash() {
     local version="$1"
     local platform="$2"
-    local url="${GITHUB_RELEASE_BASE}/rust-v${version}/codex-${platform}.tar.gz"
+    local url="${GITHUB_RELEASE_BASE}/rust-v${version}/codex-${platform}.zst"
 
     local hash
-    hash=$(nix-prefetch-url "$url" 2>/dev/null | tail -1)
+    hash=$(nix store prefetch-file --json --no-pretty "$url" | jq -r .hash)
     echo "$hash" | tr -d '\n'
 }
 
 fetch_code_mode_host_hash() {
     local version="$1"
     local platform="$2"
-    local url="${GITHUB_RELEASE_BASE}/rust-v${version}/codex-code-mode-host-${platform}.tar.gz"
+    local url="${GITHUB_RELEASE_BASE}/rust-v${version}/codex-code-mode-host-${platform}.zst"
 
     local hash
-    hash=$(nix-prefetch-url "$url" 2>/dev/null | tail -1)
+    hash=$(nix store prefetch-file --json --no-pretty "$url" | jq -r .hash)
     echo "$hash" | tr -d '\n'
 }
 
@@ -57,7 +57,7 @@ fetch_npm_hash() {
     local url="${NPM_REGISTRY_URL}/${NPM_PACKAGE_NAME}/-/codex-${version}.tgz"
 
     local hash
-    hash=$(nix-prefetch-url "$url" 2>/dev/null | tail -1)
+    hash=$(nix store prefetch-file --json --no-pretty "$url" | jq -r .hash)
     echo "$hash" | tr -d '\n'
 }
 
@@ -67,7 +67,7 @@ fetch_node_optional_dep_hash() {
     local url="${GITHUB_RELEASE_BASE}/rust-v${version}/codex-npm-${platform}-${version}.tgz"
 
     local hash
-    hash=$(nix-prefetch-url "$url" 2>/dev/null | tail -1)
+    hash=$(nix store prefetch-file --json --no-pretty "$url" | jq -r .hash)
     echo "$hash" | tr -d '\n'
 }
 
@@ -238,7 +238,7 @@ ensure_in_repository_root() {
 
 ensure_required_tools_installed() {
     command -v nix >/dev/null 2>&1 || { log_error "nix is required but not installed."; exit 1; }
-    command -v nix-prefetch-url >/dev/null 2>&1 || { log_error "nix-prefetch-url is required but not installed."; exit 1; }
+    command -v jq >/dev/null 2>&1 || { log_error "jq is required but not installed."; exit 1; }
     command -v gh >/dev/null 2>&1 || { log_error "gh (GitHub CLI) is required but not installed."; exit 1; }
 }
 
