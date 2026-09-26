@@ -8,6 +8,8 @@
 , installShellCompletions ? stdenv.buildPlatform.canExecute stdenv.hostPlatform
 , gnutar
 , gzip
+, ripgrep
+, writeText
 , openssl
 , libcap
 , libz
@@ -91,6 +93,19 @@ let
     }
   else null;
 
+  # Codex >= 0.157 canonicalises its own executable and walks up looking for
+  # codex-package.json before it will start the app-server daemon. Without a
+  # package root it aborts with "this CLI has no complete local package".
+  codexPackageManifest = writeText "codex-package.json" (builtins.toJSON {
+    layoutVersion = 1;
+    inherit version;
+    target = platform;
+    variant = "codex";
+    entrypoint = "bin/codex";
+    resourcesDir = "codex-resources";
+    pathDir = "codex-path";
+  });
+
   runtimeConfig = {
     native = {
       nativeBuildInputs = [ gnutar gzip makeWrapper ];
@@ -163,16 +178,25 @@ stdenv.mkDerivation rec {
 
   installPhase = if runtime == "native" then ''
     runHook preInstall
-    mkdir -p $out/bin $out/libexec
+    mkdir -p $out/bin $out/libexec/codex-package/bin $out/libexec/codex-package/codex-path
 
-    # Keep the wrapped executable's basename canonical for process discovery.
+    # Codex resolves its package root from the executable it is actually
+    # running, so the binaries live in a package root rather than directly in
+    # libexec. The wrapper below still supplies the environment: it execs the
+    # real binary in place, which leaves the resolved path inside the root.
+    # These names are fixed -- Codex rejects a package that contains anything
+    # other than bin/codex, bin/codex-code-mode-host and codex-path/rg.
     # The code-mode host must remain next to the executable Codex actually runs.
-    cp build/codex "$out/libexec/${selected.binName}"
-    chmod +x "$out/libexec/${selected.binName}"
-    cp build/codex-code-mode-host $out/libexec/codex-code-mode-host
-    chmod +x $out/libexec/codex-code-mode-host
-    ln -s ../libexec/codex-code-mode-host $out/bin/codex-code-mode-host
-    makeWrapper "$out/libexec/${selected.binName}" "$out/bin/${selected.binName}" \
+    cp build/codex $out/libexec/codex-package/bin/codex
+    chmod +x $out/libexec/codex-package/bin/codex
+    cp build/codex-code-mode-host $out/libexec/codex-package/bin/codex-code-mode-host
+    chmod +x $out/libexec/codex-package/bin/codex-code-mode-host
+    cp ${ripgrep}/bin/rg $out/libexec/codex-package/codex-path/rg
+    chmod +x $out/libexec/codex-package/codex-path/rg
+    cp ${codexPackageManifest} $out/libexec/codex-package/codex-package.json
+
+    ln -s ../libexec/codex-package/bin/codex-code-mode-host $out/bin/codex-code-mode-host
+    makeWrapper "$out/libexec/codex-package/bin/codex" "$out/bin/${selected.binName}" \
       --run 'export CODEX_EXECUTABLE_PATH="$HOME/.local/bin/${selected.binName}"' \
       --set DISABLE_AUTOUPDATER 1 \
       ${lib.optionalString stdenv.hostPlatform.isLinux ''--prefix PATH : "${linuxRuntimePath}"''}
