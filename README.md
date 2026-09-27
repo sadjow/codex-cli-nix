@@ -170,6 +170,14 @@ Two package variants are available:
 - **Auto-update Protection**: Prevents unexpected updates that might break your workflow
 - **Cross-platform Support**: Pre-built binaries for Linux and macOS (x86_64 and ARM64)
 
+### Background server
+
+Codex 0.157 starts a shared background server by default when the interactive UI opens. The native package lacks the install layout that server needs, and with `codex-node` the server copies about 300 MB into `$CODEX_HOME/packages` and is set up to follow the latest upstream release instead of the version pinned here. Both wrappers therefore pass `-c features.daemon_auto_start=false`, so `codex`, `codex resume`, and `codex fork` start without it.
+
+To opt back in for one run, pass `--enable daemon_auto_start`. This works with `codex-node`; the native `codex` package exits with an error. Setting `daemon_auto_start = true` in `config.toml` has no effect because the wrapper's command-line override takes precedence.
+
+`codex agents` always starts the background server. It works with `codex-node`, including the copy described above, but not with the native package yet.
+
 ## Development
 
 ```bash
