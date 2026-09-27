@@ -48,11 +48,18 @@ jobs:
 
     - name: Test ${{ matrix.variant }}
       run: |
-        case "${{ matrix.variant }}" in
-          codex)
-            ./result/bin/codex --version
-            ;;
-          codex-node)
-            ./result/bin/codex-node --version
-            ;;
-        esac
+        bin=./result/bin/${{ matrix.variant }}
+        "$bin" --version
+
+        # A short CODEX_HOME keeps the daemon's control socket path within the
+        # Unix socket length limit on macOS.
+        export CODEX_HOME="$(mktemp -d /tmp/codex-home.XXXXXX)"
+        "$bin" app-server daemon start
+        "$bin" app-server daemon stop
+
+        # The daemon runs a copy of the package from CODEX_HOME, where nothing
+        # keeps the store paths it references from being garbage collected.
+        if grep -rlE '/nix/store/[0-9a-z]{32}-' "$CODEX_HOME/packages"; then
+          echo "::error::The daemon's package copy references the Nix store"
+          exit 1
+        fi
