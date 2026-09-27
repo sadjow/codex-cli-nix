@@ -48,11 +48,12 @@ jobs:
 
     - name: Test ${{ matrix.variant }}
       run: |
-        case "${{ matrix.variant }}" in
-          codex)
-            ./result/bin/codex --version
-            ;;
-          codex-node)
-            ./result/bin/codex-node --version
-            ;;
-        esac
+        bin=./result/bin/${{ matrix.variant }}
+        "$bin" --version
+
+        export CODEX_HOME="$(mktemp -d)"
+        daemon_auto_start() {
+          "$bin" "$@" features list | awk '$1 == "daemon_auto_start" { print $NF }'
+        }
+        test "$(daemon_auto_start)" = false
+        test "$(daemon_auto_start --enable daemon_auto_start)" = true
