@@ -108,6 +108,11 @@ let
 
   selected = runtimeConfig.${runtime};
   linuxRuntimePath = lib.makeBinPath (lib.optionals stdenv.hostPlatform.isLinux [ bubblewrap ]);
+  # Codex 0.157 auto-starts a shared daemon by default. The daemon requires OpenAI's
+  # packaged install layout, which the native build does not have, and the Node build's
+  # daemon copies itself out of the store and follows upstream releases. A config
+  # override, unlike --disable, still lets `--enable daemon_auto_start` opt back in.
+  disableDaemonAutoStart = "-c features.daemon_auto_start=false";
   generateShellCompletions =
     installShellCompletions
     && runtime == "native"
@@ -173,6 +178,7 @@ stdenv.mkDerivation rec {
     chmod +x $out/libexec/codex-code-mode-host
     ln -s ../libexec/codex-code-mode-host $out/bin/codex-code-mode-host
     makeWrapper "$out/libexec/${selected.binName}" "$out/bin/${selected.binName}" \
+      --add-flags "${disableDaemonAutoStart}" \
       --run 'export CODEX_EXECUTABLE_PATH="$HOME/.local/bin/${selected.binName}"' \
       --set DISABLE_AUTOUPDATER 1 \
       ${lib.optionalString stdenv.hostPlatform.isLinux ''--prefix PATH : "${linuxRuntimePath}"''}
@@ -184,6 +190,7 @@ stdenv.mkDerivation rec {
     makeWrapper ${nodejs_22}/bin/node "$out/bin/${selected.binName}" \
       --add-flags --no-warnings \
       --add-flags "$out/lib/node_modules/@openai/codex/bin/codex.js" \
+      --add-flags "${disableDaemonAutoStart}" \
       --set NODE_PATH "$out/lib/node_modules" \
       --run 'export CODEX_EXECUTABLE_PATH="$HOME/.local/bin/${selected.binName}"' \
       --set DISABLE_AUTOUPDATER 1 \
