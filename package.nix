@@ -18,7 +18,7 @@
 }:
 
 let
-  version = "0.159.0";
+  version = "0.159.1";
 
   platformMap = {
     "aarch64-darwin" = "aarch64-apple-darwin";
@@ -39,17 +39,17 @@ let
 
   # Daemon bootstrap copies this complete package, including its manifest.
   nativeHashes = {
-    "aarch64-apple-darwin" = "1mym1n4dr5pvz2r5byb7gsbpbikp67sd1s8ms28pp9i1g5yx0j3p";
-    "x86_64-apple-darwin" = "05wh8d5vl2kcz966rmr3wzisgzcx59kq3gasq73j8ha5i01d6r5b";
-    "x86_64-unknown-linux-musl" = "0km2hcgk8zkck0hwzm2n4d4nn35l2n63skjd1bm2hkk4x3bnbnim";
-    "aarch64-unknown-linux-musl" = "1nl9vw435xg84xjx6c3z3y334qqhg0hdpb588ml8vk0qfszx56bk";
+    "aarch64-apple-darwin" = "14yqrj4q8vkzpb116bgkzlg5way1m4zqf0fvnrzxj393np67dz58";
+    "x86_64-apple-darwin" = "0al4w0r0lwnnjakqvik2d5m3xpr21yx5nbigmkgmfhzd0gjfds5q";
+    "x86_64-unknown-linux-musl" = "0p7w6ixghw3pbp4q1y0nldl5rszgfl8zkdpda8zxifmr3s7gybcs";
+    "aarch64-unknown-linux-musl" = "1v4sk5km5hx3dnaakv27p9hlknwg0an67lyja7b78hbbwyjbbcv3";
   };
 
   nodeOptionalDepHashes = {
-    "darwin-arm64" = "1kk1rwv3c35dkxf8xdj2sz2zinv9z3gl3l547hp9kmsg3kr4w0rn";
-    "darwin-x64" = "004v41q73fh6ga35ikh4iwi5pscrh3xbpjmkfhz9csi60svy66dd";
-    "linux-x64" = "166z2l0knm1b6l33szx8m110yw57kdvq3y4lbpk7ycy70hchxa17";
-    "linux-arm64" = "180ipzxf9p9ysf4kic2acajzfvw8k83sfmhc1wb124dg2rxdyq9l";
+    "darwin-arm64" = "0ngj98fd40bcc4vc8myyy7d5zkf9rksm1yfhg8scbf2i5mhzbmqx";
+    "darwin-x64" = "0yar4lcgfjk9lqz6h4daghbhmc1gfzmbngrggw3gfka7vf9m0dv2";
+    "linux-x64" = "07sn35mmwqkb6jg6lg37dxn5i8aa7jxy7bdgqxkfbbr1yjmpcr4x";
+    "linux-arm64" = "06hb0sxi4fzaxx2mnxbwbyh9fpw52dhpb7ssh79chzznbbnhnv60";
   };
 
   nativeBinaryUrl = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-package-${platform}.tar.gz";
@@ -64,7 +64,7 @@ let
   npmTarball = if runtime == "node" then
     fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}.tgz";
-      sha256 = "1n1npjc5rbbl017v4ihrkva29jvjj8f5plwyh7cf3azbxlr2cjrx";
+      sha256 = "05l0x1j0aal4w4gy24hqz0lzwn2x9pxj4slc6nkhi36kmgv349gf";
     }
   else null;
 
