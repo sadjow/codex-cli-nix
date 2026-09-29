@@ -3,6 +3,7 @@ name: Test Pull Request
 on:
   pull_request:
     paths:
+      - 'scripts/test-terminal.py'
       - 'package.nix'
       - 'flake.nix'
       - 'flake.lock'
@@ -38,6 +39,7 @@ jobs:
       - name: Build package
         run: |
           nix build .#codex --print-build-logs
+          nix build .#codex-node --no-link --print-build-logs
           
       - name: Test codex version
         run: |
@@ -48,11 +50,15 @@ jobs:
         run: |
           test -f ./result/bin/codex
           test -x ./result/bin/codex-code-mode-host
-          test -x ./result/libexec/codex
-          test -x ./result/libexec/codex-code-mode-host
+          test -x ./result/lib/codex/bin/codex
+          test -x ./result/lib/codex/bin/codex-code-mode-host
+          test -f ./result/lib/codex/codex-package.json
           test -L ./result/bin/codex-code-mode-host
 
       - name: Run basic functionality test
         run: |
           ./result/bin/codex --help || true
           ./result/bin/codex --version 2>&1 | grep -E "codex|Codex"
+
+      - name: Test terminal daemon bootstrap
+        run: python3 scripts/test-terminal.py ./result/bin/codex
