@@ -7,12 +7,14 @@ on:
       - 'flake.nix'
       - 'flake.lock'
       - '.github/workflows/**'
+      - 'scripts/**'
+      - 'tests/**'
 
 jobs:
   test-build:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, ubuntu-24.04-arm]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
@@ -35,6 +37,9 @@ jobs:
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
           skipPush: true
 
+      - name: Test release workflow invariants
+        run: nix develop -c python3 -m unittest discover -s tests
+
       - name: Build package
         run: |
           nix build .#codex --print-build-logs
@@ -48,8 +53,10 @@ jobs:
         run: |
           test -f ./result/bin/codex
           test -x ./result/bin/codex-code-mode-host
-          test -x ./result/libexec/codex
-          test -x ./result/libexec/codex-code-mode-host
+          test -x ./result/libexec/codex-package/bin/codex
+          test -x ./result/libexec/codex-package/bin/codex-code-mode-host
+          test -x ./result/libexec/codex-package/codex-path/rg
+          test -f ./result/libexec/codex-package/codex-package.json
           test -L ./result/bin/codex-code-mode-host
 
       - name: Run basic functionality test

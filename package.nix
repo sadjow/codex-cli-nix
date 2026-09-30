@@ -8,8 +8,6 @@
 , installShellCompletions ? stdenv.buildPlatform.canExecute stdenv.hostPlatform
 , gnutar
 , gzip
-, ripgrep
-, writeText
 , openssl
 , libcap
 , libz
@@ -39,21 +37,16 @@ let
   platform = platformMap.${stdenv.hostPlatform.system} or null;
   nodePlatform = nodePlatformMap.${stdenv.hostPlatform.system} or null;
 
-  nativeHashes = {
-    "aarch64-apple-darwin" = "1yllb2jrnz63c9bwsncvgadj2wrc26ld1c8ma0r52vx7nxib2i9w";
-    "x86_64-apple-darwin" = "084s3j8gf404iqdj789gyzr9b41nv8di0r9b3q6vfqjzdf09n6i8";
-    "x86_64-unknown-linux-musl" = "1wja8lqwmcz5mi55bqr7lq0kfywfqlpch5945px3g0cf0a71x379";
-    "aarch64-unknown-linux-musl" = "0lv2n5fv3245r5lv5shz5drym5bvhs0p86wmn97hvzf5q4biqssc";
-  };
-
-  # codex >= 0.143 spawns a separate `codex-code-mode-host` binary (found
-  # next to the running executable) when "code mode" is enabled. Shipped as its
-  # own release asset, so the native build must fetch and install it too.
-  codeModeHostHashes = {
-    "aarch64-apple-darwin" = "05432diwyzjklhnr8i8rmjqjzxwb9b3fmpzvr1hmrpvhr79350r8";
-    "x86_64-apple-darwin" = "15hcbdh70m58krxk6lvd9ws2rsvrjkw4j5szax0bpzrqdgyair9z";
-    "x86_64-unknown-linux-musl" = "1z6pfblkkf6523mbkf8h7x5ikavyl69v54nvggp0dg76pfwgj5im";
-    "aarch64-unknown-linux-musl" = "13iipfbmr24g885sshd3amvj5s192syrwc14mmvrm3m9dn044dz8";
+  # Codex >= 0.157 starts its app-server daemon only from a package root, which
+  # it finds by canonicalising its own executable. The daemon copies that root
+  # into CODEX_HOME and runs it outside the store, so the root comes from
+  # OpenAI's package archive, whose helpers do not depend on the store. On
+  # Linux the codex binary also pins the digest of the bundled bwrap.
+  packageHashes = {
+    "aarch64-apple-darwin" = "1asax88kdsv69cikr9y7x3fakbqi42i9ldk5x7fdkx62366m7nkc";
+    "x86_64-apple-darwin" = "0xxgss4syy4593nq8ds2liwp8dhfhw487c88wwilkxyiqxb5la6j";
+    "x86_64-unknown-linux-musl" = "0pzyj2jmj34qvy9s9y1x8ngnppxgbrdngb1mmm4wnwzxr5l1h88f";
+    "aarch64-unknown-linux-musl" = "0wdl8yx64libxkiafph7gaja3i7nxnqw2kjsd95r1r7lf06yg7s9";
   };
 
   nodeOptionalDepHashes = {
@@ -63,21 +56,28 @@ let
     "linux-arm64" = "0kw2w5q5i8rff2cl9yr2gj9mjcs737lidzp5xif9v9k314n4hgdp";
   };
 
-  nativeBinaryUrl = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-${platform}.tar.gz";
-
-  nativeBinary = if runtime == "native" && platform != null then
+  codexPackage = if runtime == "native" && platform != null then
     fetchurl {
-      url = nativeBinaryUrl;
-      sha256 = nativeHashes.${platform};
+      url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-package-${platform}.tar.gz";
+      sha256 = packageHashes.${platform};
     }
   else null;
 
-  codeModeHost = if runtime == "native" && platform != null then
-    fetchurl {
-      url = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-code-mode-host-${platform}.tar.gz";
-      sha256 = codeModeHostHashes.${platform};
-    }
-  else null;
+  # The bundled ARM64 Linux rg requires a glibc loader. Use a static archive
+  # so the daemon's copied package also survives Nix store garbage collection.
+  useStaticRg = stdenv.hostPlatform.isLinux && stdenv.hostPlatform.isAarch64;
+  staticRgVersion = "15.2.0";
+  staticRgName = "ripgrep-${staticRgVersion}-aarch64-unknown-linux-musl";
+  staticRg = fetchurl {
+    url = "https://github.com/BurntSushi/ripgrep/releases/download/${staticRgVersion}/${staticRgName}.tar.gz";
+    sha256 = "0589fkhqc7pn020m6412wphapykw2hiiz456npgrkrxg0rr1w2w0";
+  };
+
+  # The archive also carries zsh and voice helpers that this package has never
+  # shipped; on Linux they too need a glibc loader that NixOS does not provide.
+  packageFiles = [ "codex-package.json" "bin/codex" "bin/codex-code-mode-host" ]
+    ++ lib.optionals (!useStaticRg) [ "codex-path/rg" ]
+    ++ lib.optionals stdenv.hostPlatform.isLinux [ "codex-resources/bwrap" ];
 
   npmTarball = if runtime == "node" then
     fetchurl {
@@ -92,19 +92,6 @@ let
       sha256 = nodeOptionalDepHashes.${nodePlatform};
     }
   else null;
-
-  # Codex >= 0.157 canonicalises its own executable and walks up looking for
-  # codex-package.json before it will start the app-server daemon. Without a
-  # package root it aborts with "this CLI has no complete local package".
-  codexPackageManifest = writeText "codex-package.json" (builtins.toJSON {
-    layoutVersion = 1;
-    inherit version;
-    target = platform;
-    variant = "codex";
-    entrypoint = "bin/codex";
-    resourcesDir = "codex-resources";
-    pathDir = "codex-path";
-  });
 
   runtimeConfig = {
     native = {
@@ -147,14 +134,7 @@ stdenv.mkDerivation rec {
   buildPhase = if runtime == "native" then ''
     runHook preBuild
     mkdir -p build
-    tar -xzf ${nativeBinary} -C build
-    mv build/codex-${platform} build/codex
-    chmod u+w,+x build/codex
-
-    tar -xzf ${codeModeHost} -C build
-    mv build/codex-code-mode-host-${platform} build/codex-code-mode-host
-    chmod u+w,+x build/codex-code-mode-host
-
+    tar -xzf ${codexPackage} -C build ${lib.escapeShellArgs packageFiles}
     runHook postBuild
   '' else ''
     runHook preBuild
@@ -178,22 +158,23 @@ stdenv.mkDerivation rec {
 
   installPhase = if runtime == "native" then ''
     runHook preInstall
-    mkdir -p $out/bin $out/libexec/codex-package/bin $out/libexec/codex-package/codex-path
+    mkdir -p $out/bin $out/libexec
 
     # Codex resolves its package root from the executable it is actually
     # running, so the binaries live in a package root rather than directly in
     # libexec. The wrapper below still supplies the environment: it execs the
     # real binary in place, which leaves the resolved path inside the root.
-    # These names are fixed -- Codex rejects a package that contains anything
-    # other than bin/codex, bin/codex-code-mode-host and codex-path/rg.
     # The code-mode host must remain next to the executable Codex actually runs.
-    cp build/codex $out/libexec/codex-package/bin/codex
-    chmod +x $out/libexec/codex-package/bin/codex
-    cp build/codex-code-mode-host $out/libexec/codex-package/bin/codex-code-mode-host
-    chmod +x $out/libexec/codex-package/bin/codex-code-mode-host
-    cp ${ripgrep}/bin/rg $out/libexec/codex-package/codex-path/rg
-    chmod +x $out/libexec/codex-package/codex-path/rg
-    cp ${codexPackageManifest} $out/libexec/codex-package/codex-package.json
+    cp -R build $out/libexec/codex-package
+    ${lib.optionalString useStaticRg ''
+      mkdir -p $out/libexec/codex-package/codex-path
+      tar -xzf ${staticRg} --strip-components=1 \
+        -C $out/libexec/codex-package/codex-path ${staticRgName}/rg
+      mkdir -p $out/share/licenses/ripgrep
+      tar -xzf ${staticRg} --strip-components=1 \
+        -C $out/share/licenses/ripgrep \
+        ${staticRgName}/COPYING ${staticRgName}/LICENSE-MIT ${staticRgName}/UNLICENSE
+    ''}
 
     ln -s ../libexec/codex-package/bin/codex-code-mode-host $out/bin/codex-code-mode-host
     makeWrapper "$out/libexec/codex-package/bin/codex" "$out/bin/${selected.binName}" \
