@@ -37,12 +37,13 @@ jobs:
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
           skipPush: true
 
-      - name: Test release workflow invariants
+      - name: Run regression tests
         run: nix develop -c python3 -m unittest discover -s tests
 
       - name: Build package
         run: |
           nix build .#codex --print-build-logs
+          nix build .#codex-node --no-link --print-build-logs
           
       - name: Test codex version
         run: |
@@ -53,13 +54,16 @@ jobs:
         run: |
           test -f ./result/bin/codex
           test -x ./result/bin/codex-code-mode-host
-          test -x ./result/libexec/codex-package/bin/codex
-          test -x ./result/libexec/codex-package/bin/codex-code-mode-host
-          test -x ./result/libexec/codex-package/codex-path/rg
-          test -f ./result/libexec/codex-package/codex-package.json
+          test -x ./result/lib/codex/bin/codex
+          test -x ./result/lib/codex/bin/codex-code-mode-host
+          test -f ./result/lib/codex/codex-package.json
+          test -x ./result/lib/codex/codex-path/rg
           test -L ./result/bin/codex-code-mode-host
 
       - name: Run basic functionality test
         run: |
           ./result/bin/codex --help || true
           ./result/bin/codex --version 2>&1 | grep -E "codex|Codex"
+
+      - name: Test terminal daemon bootstrap
+        run: python3 scripts/test-terminal.py ./result/bin/codex

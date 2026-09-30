@@ -32,7 +32,7 @@ get_latest_version() {
     echo "$tag" | sed 's/^rust-v//'
 }
 
-fetch_package_hash() {
+fetch_native_hash() {
     local version="$1"
     local platform="$2"
     local url="${GITHUB_RELEASE_BASE}/rust-v${version}/codex-package-${platform}.tar.gz"
@@ -84,18 +84,18 @@ update_npm_hash() {
     mv "$temp_file" package.nix
 }
 
-update_package_hash() {
+update_native_hash() {
     local platform="$1"
     local hash="$2"
     local temp_file
     temp_file=$(mktemp)
 
     awk -v platform="$platform" -v hash="$hash" '
-        /packageHashes = \{/ { in_block=1 }
-        in_block && $0 ~ "\"" platform "\"" {
+        /nativeHashes = \{/ { in_native_block=1 }
+        in_native_block && $0 ~ "\"" platform "\"" {
             sub(/= "[^"]*"/, "= \"" hash "\"")
         }
-        in_block && /\};/ { in_block=0 }
+        in_native_block && /\};/ { in_native_block=0 }
         { print }
     ' package.nix > "$temp_file"
     mv "$temp_file" package.nix
@@ -132,15 +132,15 @@ update_to_version() {
     log_info "Fetching native package hashes..."
     for platform in "${NATIVE_PLATFORMS[@]}"; do
         log_info "  Fetching hash for $platform..."
-        local package_hash
-        package_hash=$(fetch_package_hash "$new_version" "$platform")
-        if [ -z "$package_hash" ]; then
-            log_error "Failed to fetch native package hash for $platform"
+        local native_hash
+        native_hash=$(fetch_native_hash "$new_version" "$platform")
+        if [ -z "$native_hash" ]; then
+            log_error "Failed to fetch native hash for $platform"
             mv package.nix.bak package.nix
             exit 1
         fi
-        log_info "  $platform: $package_hash"
-        update_package_hash "$platform" "$package_hash"
+        log_info "  $platform: $native_hash"
+        update_native_hash "$platform" "$native_hash"
     done
 
     log_info "Fetching npm tarball hash..."

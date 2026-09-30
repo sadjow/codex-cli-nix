@@ -21,6 +21,14 @@ class PackagePortabilityTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Store dependency in rg'):
             PORTABILITY.check_package(self.root)
 
+    def test_checks_a_single_helper(self):
+        helper = self.root / 'rg'
+        helper.write_bytes(b'/nix/store/' + b'0' * 32 + b'-glibc/lib/ld.so')
+        with self.assertRaisesRegex(ValueError, 'Store dependency in rg'):
+            PORTABILITY.check_package(helper)
+        helper.write_bytes(b'portable helper')
+        PORTABILITY.check_package(helper)
+
     def test_rejects_system_dynamic_loader(self):
         binary = bytearray(120)
         binary[:6] = b'\x7fELF\x02\x01'

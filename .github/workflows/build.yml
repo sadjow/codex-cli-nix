@@ -46,9 +46,9 @@ jobs:
       run: |
         nix build .#${{ matrix.variant }}
 
-    - name: Check native package portability
+    - name: Check native search portability
       if: matrix.variant == 'codex'
-      run: python3 scripts/check-package-portability.py ./result/libexec/codex-package
+      run: python3 scripts/check-package-portability.py ./result/lib/codex/codex-path/rg
 
     - name: Push to Cachix
       if: github.ref == 'refs/heads/main'
