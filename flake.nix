@@ -45,6 +45,7 @@
 
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
+            (python3.withPackages (ps: [ ps.pyyaml ]))
             nixpkgs-fmt
             nix-prefetch-git
             cachix
