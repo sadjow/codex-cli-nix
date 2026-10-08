@@ -19,8 +19,13 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
         variant: [codex, codex-node]
+        include:
+          - os: ubuntu-24.04-arm
+            variant: codex
     steps:
     - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.sha }}
 
     - uses: cachix/install-nix-action@v31
       with:
@@ -41,6 +46,10 @@ jobs:
       run: |
         nix build .#${{ matrix.variant }}
 
+    - name: Check native search portability
+      if: matrix.variant == 'codex'
+      run: python3 scripts/check-package-portability.py ./result/lib/codex/codex-path/rg
+
     - name: Push to Cachix
       if: github.ref == 'refs/heads/main'
       run: |
@@ -48,11 +57,28 @@ jobs:
 
     - name: Test ${{ matrix.variant }}
       run: |
-        case "${{ matrix.variant }}" in
-          codex)
-            ./result/bin/codex --version
-            ;;
-          codex-node)
-            ./result/bin/codex-node --version
-            ;;
-        esac
+        bin=./result/bin/${{ matrix.variant }}
+        "$bin" --version
+
+        # A short CODEX_HOME keeps the daemon's control socket path within the
+        # Unix socket length limit on macOS.
+        export CODEX_HOME="$(mktemp -d /tmp/codex-home.XXXXXX)"
+        "$bin" app-server daemon start
+        "$bin" app-server daemon stop
+
+        if [ "${{ matrix.variant }}" = codex ]; then
+          found_rg=false
+          while IFS= read -r rg; do
+            found_rg=true
+            "$rg" --version
+            printf 'portable search fixture\n' | "$rg" 'portable search fixture'
+          done < <(find "$CODEX_HOME/packages" -type f -path '*/codex-path/rg')
+          test "$found_rg" = true
+        fi
+
+        # The daemon runs a copy of the package from CODEX_HOME, where nothing
+        # keeps the store paths it references from being garbage collected.
+        if grep -rlE '/nix/store/[0-9a-z]{32}-' "$CODEX_HOME/packages"; then
+          echo "::error::The daemon's package copy references the Nix store"
+          exit 1
+        fi
