@@ -18,7 +18,7 @@
 }:
 
 let
-  version = "0.162.0";
+  version = "0.162.1";
 
   platformMap = {
     "aarch64-darwin" = "aarch64-apple-darwin";
@@ -39,17 +39,17 @@ let
 
   # Daemon bootstrap copies this complete package, including its manifest.
   nativeHashes = {
-    "aarch64-apple-darwin" = "12v28cizhcaba3a6b2s34pw8cgdll3pklrmjid1rvdf3m68fw2aq";
-    "x86_64-apple-darwin" = "0g5x5gzik8yx31a8mgbwj2zf86jrgf7n92lz1lynhfgk0c8l52wj";
-    "x86_64-unknown-linux-musl" = "1i8hq27yk7bsf43y9994h8l9fdn0r464sbsssw4r21fjq523jmsg";
-    "aarch64-unknown-linux-musl" = "1nibzgkjhi3ifqwsvdczzibaka1xzwwc524vfa2inyh33si5yynl";
+    "aarch64-apple-darwin" = "0pc8ks9v6w9x0plsrwq438nrqkx9l9k3rq8vvjllw3ssvz6prqw8";
+    "x86_64-apple-darwin" = "1vbsvk17i6bckgnyhdk0p0w66q7xaiyd535ylji4z7c1zq5c4jl9";
+    "x86_64-unknown-linux-musl" = "1qx33xhligzzshx0nc0avj4xs7xbivq34hvnwg5qc3df59rgaxm6";
+    "aarch64-unknown-linux-musl" = "12yqq0xak8b10jv37alq71xy36aiv427fbzbzmipmcmyjh5wxaak";
   };
 
   nodeOptionalDepHashes = {
-    "darwin-arm64" = "1svl713b578w5slsnm5iaxmmypand84a0abnsmbxl6z37i0dc9z6";
-    "darwin-x64" = "0vbf8fzq0k7ys117asai2c2f3phnicx7064z2dimqpqlw1xr25bf";
-    "linux-x64" = "10y90rmysv31nyq0kqikkndbf513p3qjds85npdm6vc9mpkl5lyv";
-    "linux-arm64" = "0n55ibns24sma1kc74wsdpwvmm8nrsr2jifc5aykw20b819hz5h0";
+    "darwin-arm64" = "1bd97f98hrd5pyisq6zzk9piych2hnnq5d2j07f7l8q5g81700zy";
+    "darwin-x64" = "1v7mf0a6zqsqf8hyi19cz78kvl6bhrvs9hsvndp0iwcrsdlkvxg4";
+    "linux-x64" = "17y0ym7y0mjby5qhxni8556cicwbx0wnw4k40vkywr5lg0b725vl";
+    "linux-arm64" = "0jxd1jkai7hrw9zgq8z2jqppy0agyymwwnp5887davi91hfhamd3";
   };
 
   nativeBinaryUrl = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-package-${platform}.tar.gz";
@@ -64,7 +64,7 @@ let
   npmTarball = if runtime == "node" then
     fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}.tgz";
-      sha256 = "0q68r0af06aqb9fdqw6kh50w6dy4i8igxn40fpr89brifrp7vdkc";
+      sha256 = "1sk55ga8bzdnd0054krjig5v6w3pvpc88d4hkkvf90sqlqrjwjqb";
     }
   else null;
 
