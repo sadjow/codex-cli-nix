@@ -196,10 +196,12 @@ nix develop -c python3 -m unittest discover -s tests
 
 This repository uses GitHub Actions to automatically check for new Codex versions hourly. When a new version is detected:
 
-1. A pull request is automatically created with the version update
-2. Required release artifact hashes are automatically refreshed
-3. Tests run on both Linux and macOS to verify the build
-4. The PR auto-merges if all checks pass
+1. The update script refreshes the release artifact hashes and verifies the build on Linux
+2. A pull request with the version update is created and squash-merged right away, because `main` has no required checks
+3. The merged commit is built and smoke-tested on Linux and macOS and pushed to Cachix
+4. Version tags are created and moved only after that build succeeds (`vX.Y.Z`, `vX`, `latest`)
+
+The update branch is deleted on merge, so its pull request checks can show as failed with no jobs. The release gate is the build on `main`, and following `main` directly can pick up a version bump before that build has finished.
 
 The automated update workflow runs:
 - Every hour (on the hour) UTC
