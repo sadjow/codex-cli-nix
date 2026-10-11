@@ -185,6 +185,9 @@ nix build
 
 # Enter development shell
 nix develop
+
+# Run package and release-workflow regression checks
+nix develop -c python3 -m unittest discover -s tests
 ```
 
 ## Updating Codex Version

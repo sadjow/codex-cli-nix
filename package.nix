@@ -61,6 +61,16 @@ let
     }
   else null;
 
+  # The bundled ARM64 Linux rg requires a glibc loader. Use a static archive
+  # so the daemon's copied package also survives Nix store garbage collection.
+  useStaticRg = stdenv.hostPlatform.isLinux && stdenv.hostPlatform.isAarch64;
+  staticRgVersion = "15.2.0";
+  staticRgName = "ripgrep-${staticRgVersion}-aarch64-unknown-linux-musl";
+  staticRg = fetchurl {
+    url = "https://github.com/BurntSushi/ripgrep/releases/download/${staticRgVersion}/${staticRgName}.tar.gz";
+    sha256 = "0589fkhqc7pn020m6412wphapykw2hiiz456npgrkrxg0rr1w2w0";
+  };
+
   npmTarball = if runtime == "node" then
     fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}.tgz";
@@ -145,6 +155,16 @@ stdenv.mkDerivation rec {
 
     # Codex discovers its package from bin/ and the adjacent manifest.
     cp -r build $out/lib/codex
+    ${lib.optionalString useStaticRg ''
+      rm $out/lib/codex/codex-path/rg
+      tar -xzf ${staticRg} --strip-components=1 \
+        -C $out/lib/codex/codex-path ${staticRgName}/rg
+      mkdir -p $out/share/licenses/ripgrep
+      tar -xzf ${staticRg} --strip-components=1 \
+        -C $out/share/licenses/ripgrep \
+        ${staticRgName}/COPYING ${staticRgName}/LICENSE-MIT ${staticRgName}/UNLICENSE
+    ''}
+
     ln -s ../lib/codex/bin/codex-code-mode-host $out/bin/codex-code-mode-host
     makeWrapper "$out/lib/codex/bin/codex" "$out/bin/${selected.binName}" \
       --run 'export CODEX_EXECUTABLE_PATH="$HOME/.local/bin/${selected.binName}"' \

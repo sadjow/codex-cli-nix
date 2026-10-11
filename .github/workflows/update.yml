@@ -80,7 +80,7 @@ jobs:
 
           ### Changes
           - Updated `version` in `package.nix`
-          - Updated native codex and code-mode host hashes for all platforms
+          - Updated native codex package hashes for all platforms
           - Updated npm tarball and node platform dependency hashes
 
           ### Checklist
