@@ -7,31 +7,52 @@ if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   exit 1
 fi
 MAJOR=${VERSION%%.*}
+HEAD_COMMIT=$(git rev-parse HEAD)
 
 # Record the remote values before changing anything. Explicit leases also
 # protect against another writer updating either channel during this run.
 REMOTE_TAGS=$(git ls-remote --refs origin refs/tags/latest "refs/tags/v$MAJOR")
-LATEST_SHA=$(awk '$2 == "refs/tags/latest" { print $1 }' <<< "$REMOTE_TAGS")
-MAJOR_SHA=$(awk -v ref="refs/tags/v$MAJOR" '$2 == ref { print $1 }' <<< "$REMOTE_TAGS")
 
-# A rerun of an older build must not move the channels back behind a release
-# that has already been published from a newer commit.
-if [[ -n $LATEST_SHA ]]; then
-  git fetch --quiet origin "+refs/tags/latest:refs/tags/latest"
-  PUBLISHED_COMMIT=$(git rev-parse 'refs/tags/latest^{commit}')
-  if [[ $PUBLISHED_COMMIT != "$(git rev-parse HEAD)" ]] && git merge-base --is-ancestor HEAD "$PUBLISHED_COMMIT"; then
-    echo "latest already points to the newer commit $PUBLISHED_COMMIT; leaving moving tags unchanged"
-    exit 0
+remote_sha() {
+  awk -v ref="refs/tags/$1" '$2 == ref { print $1 }' <<< "$REMOTE_TAGS"
+}
+
+tag_message() {
+  case $1 in
+    latest) echo "Latest release: v$VERSION" ;;
+    *) echo "Latest $1 release: v$VERSION" ;;
+  esac
+}
+
+# A rerun of an older build must not move a channel back behind a release
+# that has already been published from a newer commit. Each channel is judged
+# on its own: a retried older major still has to advance its own channel.
+points_at_newer_release() {
+  local name=$1 published_commit
+  [[ -n $(remote_sha "$name") ]] || return 1
+  git fetch --quiet origin "+refs/tags/$name:refs/tags/$name"
+  published_commit=$(git rev-parse "refs/tags/$name^{commit}")
+  [[ $published_commit != "$HEAD_COMMIT" ]] && git merge-base --is-ancestor HEAD "$published_commit"
+}
+
+LEASES=()
+REFSPECS=()
+for name in latest "v$MAJOR"; do
+  if points_at_newer_release "$name"; then
+    echo "$name already points to the newer commit $(git rev-parse "refs/tags/$name^{commit}"); leaving it unchanged"
+    continue
   fi
+  git tag -f -a "$name" -m "$(tag_message "$name")" HEAD
+  LEASES+=("--force-with-lease=refs/tags/$name:$(remote_sha "$name")")
+  REFSPECS+=("refs/tags/$name:refs/tags/$name")
+done
+
+if (( ${#REFSPECS[@]} == 0 )); then
+  echo "leaving moving tags unchanged"
+  exit 0
 fi
 
-git tag -f -a latest -m "Latest release: v$VERSION" HEAD
-git tag -f -a "v$MAJOR" -m "Latest v$MAJOR release: v$VERSION" HEAD
-
-# Never delete live channel refs. GitHub applies both updates or neither,
+# Never delete live channel refs. GitHub applies every update or none,
 # including when one ref is rejected. Empty leases allow missing tags to be
 # recreated, but only if they are still absent at push time.
-git push --atomic \
-  "--force-with-lease=refs/tags/latest:$LATEST_SHA" \
-  "--force-with-lease=refs/tags/v$MAJOR:$MAJOR_SHA" \
-  origin refs/tags/latest:refs/tags/latest "refs/tags/v$MAJOR:refs/tags/v$MAJOR"
+git push --atomic "${LEASES[@]}" origin "${REFSPECS[@]}"

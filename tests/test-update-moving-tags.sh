@@ -285,6 +285,30 @@ test_older_build_rerun_keeps_newer_release() {
     assert_immutable_refs
 }
 
+test_older_major_retry_advances_its_channel() {
+    make_fixture
+    seed_moving_tags
+    advance_head
+    local skipped_commit=$TARGET_COMMIT
+    advance_head
+    run_successfully 12.0.0
+    assert_moving_tags v12
+    local newer_latest
+    newer_latest=$(remote_git rev-parse refs/tags/latest)
+
+    # Retrying the 2.2.0 tag job after 12.0.0 shipped must advance v2 alone.
+    local_git checkout --quiet --detach "$skipped_commit"
+    : > "$RECEIVE_LOG"
+    run_script 2.2.0 || fail 'older major retry unexpectedly failed'
+    assert_equal "$newer_latest" "$(remote_git rev-parse refs/tags/latest)" 'latest was moved back to an older major'
+    assert_equal tag "$(remote_git cat-file -t refs/tags/v2)" 'v2 remote tag is not annotated'
+    assert_equal "$skipped_commit" "$(remote_git rev-parse 'refs/tags/v2^{}')" 'v2 was not advanced to the retried release'
+    assert_equal "$(local_git rev-parse refs/tags/v2)" "$(remote_git rev-parse refs/tags/v2)" 'v2 local and remote tag objects differ'
+    assert_equal 1 "$(grep -c '^BEGIN$' "$RECEIVE_LOG")" 'expected exactly one push transaction'
+    assert_equal refs/tags/v2 "$(awk 'NF == 3 { print $3 }' "$RECEIVE_LOG")" 'push touched refs other than v2'
+    assert_immutable_refs
+}
+
 test_invalid_versions() {
     make_fixture
     seed_moving_tags
@@ -318,5 +342,6 @@ run_test 'rejecting one tag leaves both remote tags unchanged; retry succeeds' t
 run_test 'restores either missing moving tag' test_missing_tag_restoration
 run_test 'concurrent changes to existing or missing tags are preserved by leases' test_concurrent_publication
 run_test 'rerunning an older build leaves a newer release in place' test_older_build_rerun_keeps_newer_release
+run_test 'retrying an older major advances only its own channel' test_older_major_retry_advances_its_channel
 run_test 'invalid versions change no refs and attempt no push' test_invalid_versions
 printf '\nAll moving-tag regression tests passed.\n'
