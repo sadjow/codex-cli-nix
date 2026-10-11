@@ -78,7 +78,19 @@ jobs:
 
         # The daemon runs a copy of the package from CODEX_HOME, where nothing
         # keeps the store paths it references from being garbage collected.
-        if grep -rlE '/nix/store/[0-9a-z]{32}-' "$CODEX_HOME/packages"; then
-          echo "::error::The daemon's package copy references the Nix store"
-          exit 1
-        fi
+        packages="$CODEX_HOME/packages"
+        test -d "$packages"
+        scan_status=0
+        matches=$(grep -rlE '/nix/store/[0-9a-z]{32}-' "$packages") || scan_status=$?
+        case $scan_status in
+          0)
+            echo "::error::The daemon's package copy references the Nix store"
+            printf '%s\n' "$matches"
+            exit 1
+            ;;
+          1) ;;
+          *)
+            echo "::error::Scanning $packages for Nix store references failed"
+            exit "$scan_status"
+            ;;
+        esac
