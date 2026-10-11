@@ -8,6 +8,7 @@
 , installShellCompletions ? stdenv.buildPlatform.canExecute stdenv.hostPlatform
 , gnutar
 , gzip
+, zstd
 , openssl
 , libcap
 , libz
@@ -39,10 +40,10 @@ let
 
   # Daemon bootstrap copies this complete package, including its manifest.
   nativeHashes = {
-    "aarch64-apple-darwin" = "0pc8ks9v6w9x0plsrwq438nrqkx9l9k3rq8vvjllw3ssvz6prqw8";
-    "x86_64-apple-darwin" = "1vbsvk17i6bckgnyhdk0p0w66q7xaiyd535ylji4z7c1zq5c4jl9";
-    "x86_64-unknown-linux-musl" = "1qx33xhligzzshx0nc0avj4xs7xbivq34hvnwg5qc3df59rgaxm6";
-    "aarch64-unknown-linux-musl" = "12yqq0xak8b10jv37alq71xy36aiv427fbzbzmipmcmyjh5wxaak";
+    "aarch64-apple-darwin" = "1fi22y87l284i6pw7nsym287h0w4cjc482g9y6fic9mr4l17c1nw";
+    "x86_64-apple-darwin" = "01lf3zgcilk1cgw3l66wdzb79lnnplixqc6hxkd22cgagqpiafqz";
+    "x86_64-unknown-linux-musl" = "1wn89sr9jwlmm9kfzdnhglx5x827ipdd4nsnpi3lp2bqwqmx095x";
+    "aarch64-unknown-linux-musl" = "1h8ggrsflc54j0jvgcs3f3839csmqsm9h3nalwmayx85vy1g169a";
   };
 
   nodeOptionalDepHashes = {
@@ -52,7 +53,7 @@ let
     "linux-arm64" = "0jxd1jkai7hrw9zgq8z2jqppy0agyymwwnp5887davi91hfhamd3";
   };
 
-  nativeBinaryUrl = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-package-${platform}.tar.gz";
+  nativeBinaryUrl = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-package-${platform}.tar.zst";
 
   nativeBinary = if runtime == "native" && platform != null then
     fetchurl {
@@ -87,7 +88,7 @@ let
 
   runtimeConfig = {
     native = {
-      nativeBuildInputs = [ gnutar gzip makeWrapper ];
+      nativeBuildInputs = [ gnutar gzip zstd makeWrapper ];
       buildInputs = lib.optionals stdenv.hostPlatform.isLinux [ openssl libcap libz ];
       description = "OpenAI Codex CLI (Native Binary) - AI coding assistant in your terminal";
       binName = nativeBinName;
@@ -126,7 +127,7 @@ stdenv.mkDerivation rec {
   buildPhase = if runtime == "native" then ''
     runHook preBuild
     mkdir -p build
-    tar -xzf ${nativeBinary} -C build
+    tar --zstd -xf ${nativeBinary} -C build
 
     runHook postBuild
   '' else ''
