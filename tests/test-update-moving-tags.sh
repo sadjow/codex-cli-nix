@@ -309,6 +309,42 @@ test_older_major_retry_advances_its_channel() {
     assert_immutable_refs
 }
 
+test_failed_refresh_aborts_publication() {
+    make_fixture
+    seed_moving_tags
+    advance_head
+    run_successfully 2.2.0
+    assert_moving_tags
+    local newer_latest newer_major
+    newer_latest=$(remote_git rev-parse refs/tags/latest)
+    newer_major=$(remote_git rev-parse refs/tags/v2)
+
+    # An older checkout whose local channel tags lag the remote must not
+    # publish from those stale tags when refreshing them fails.
+    local_git checkout --quiet --detach "$INITIAL_COMMIT"
+    local_git tag -f latest "$INITIAL_COMMIT" >/dev/null
+    local_git tag -f v2 "$INITIAL_COMMIT" >/dev/null
+    local broken_git="$FIXTURE/broken-git"
+    mkdir "$broken_git"
+    cat > "$broken_git/git" <<WRAPPER
+#!/usr/bin/env bash
+if [[ \$1 == fetch ]]; then
+    echo 'fatal: simulated fetch failure' >&2
+    exit 128
+fi
+exec "$(command -v git)" "\$@"
+WRAPPER
+    chmod +x "$broken_git/git"
+    : > "$RECEIVE_LOG"
+    if PATH="$broken_git:$PATH" run_script 2.1.0; then
+        fail 'publication succeeded although the channel refresh failed'
+    fi
+    assert_equal "$newer_latest" "$(remote_git rev-parse refs/tags/latest)" 'latest was moved back after a failed refresh'
+    assert_equal "$newer_major" "$(remote_git rev-parse refs/tags/v2)" 'v2 was moved back after a failed refresh'
+    [[ ! -s "$RECEIVE_LOG" ]] || fail 'a push was attempted after a failed refresh'
+    assert_immutable_refs
+}
+
 test_invalid_versions() {
     make_fixture
     seed_moving_tags
@@ -343,5 +379,6 @@ run_test 'restores either missing moving tag' test_missing_tag_restoration
 run_test 'concurrent changes to existing or missing tags are preserved by leases' test_concurrent_publication
 run_test 'rerunning an older build leaves a newer release in place' test_older_build_rerun_keeps_newer_release
 run_test 'retrying an older major advances only its own channel' test_older_major_retry_advances_its_channel
+run_test 'a failed channel refresh aborts before any push' test_failed_refresh_aborts_publication
 run_test 'invalid versions change no refs and attempt no push' test_invalid_versions
 printf '\nAll moving-tag regression tests passed.\n'

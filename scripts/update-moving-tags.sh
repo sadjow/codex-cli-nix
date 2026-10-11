@@ -25,25 +25,35 @@ tag_message() {
 }
 
 # A rerun of an older build must not move a channel back behind a release
-# that has already been published from a newer commit. Each channel is judged
-# on its own: a retried older major still has to advance its own channel.
-points_at_newer_release() {
-  local name=$1 published_commit
-  [[ -n $(remote_sha "$name") ]] || return 1
-  git fetch --quiet origin "+refs/tags/$name:refs/tags/$name"
-  published_commit=$(git rev-parse "refs/tags/$name^{commit}")
-  [[ $published_commit != "$HEAD_COMMIT" ]] && git merge-base --is-ancestor HEAD "$published_commit"
+# that has already been published from a newer commit. An ancestry error is
+# not a negative answer, so it fails closed instead of allowing the push.
+newer_release_published() {
+  local published_commit=$1 ancestry=0
+  [[ $published_commit != "$HEAD_COMMIT" ]] || return 1
+  git merge-base --is-ancestor HEAD "$published_commit" || ancestry=$?
+  if (( ancestry > 1 )); then
+    echo "Could not compare HEAD with the published commit $published_commit" >&2
+    exit 1
+  fi
+  return "$ancestry"
 }
 
 LEASES=()
 REFSPECS=()
 for name in latest "v$MAJOR"; do
-  if points_at_newer_release "$name"; then
-    echo "$name already points to the newer commit $(git rev-parse "refs/tags/$name^{commit}"); leaving it unchanged"
-    continue
+  published_sha=$(remote_sha "$name")
+  if [[ -n $published_sha ]]; then
+    # Compare against the published object, never a stale local tag; a failed
+    # refresh aborts the run here.
+    git fetch --quiet origin "+refs/tags/$name:refs/tags/$name"
+    published_commit=$(git rev-parse "refs/tags/$name^{commit}")
+    if newer_release_published "$published_commit"; then
+      echo "$name already points to the newer commit $published_commit; leaving it unchanged"
+      continue
+    fi
   fi
   git tag -f -a "$name" -m "$(tag_message "$name")" HEAD
-  LEASES+=("--force-with-lease=refs/tags/$name:$(remote_sha "$name")")
+  LEASES+=("--force-with-lease=refs/tags/$name:$published_sha")
   REFSPECS+=("refs/tags/$name:refs/tags/$name")
 done
 
