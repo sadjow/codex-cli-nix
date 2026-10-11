@@ -35,7 +35,7 @@ get_latest_version() {
 fetch_native_hash() {
     local version="$1"
     local platform="$2"
-    local url="${GITHUB_RELEASE_BASE}/rust-v${version}/codex-package-${platform}.tar.gz"
+    local url="${GITHUB_RELEASE_BASE}/rust-v${version}/codex-package-${platform}.tar.zst"
 
     local hash
     hash=$(nix-prefetch-url "$url" 2>/dev/null | tail -1)
