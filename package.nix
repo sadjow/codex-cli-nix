@@ -19,7 +19,7 @@
 }:
 
 let
-  version = "0.163.0";
+  version = "0.164.0";
 
   platformMap = {
     "aarch64-darwin" = "aarch64-apple-darwin";
@@ -40,17 +40,17 @@ let
 
   # Daemon bootstrap copies this complete package, including its manifest.
   nativeHashes = {
-    "aarch64-apple-darwin" = "0b20ndp3g8lg38bga5v5r80ns764icg6165zx81k0phiavljx084";
-    "x86_64-apple-darwin" = "0f3yva2myxxhzw4wkn025lznw4921ma8ki8lr074q308ysigrxjz";
-    "x86_64-unknown-linux-musl" = "15lwrxj99m5bgwj58xdsd9cal75ygw317cg82zl2fyabyb0xl8nz";
-    "aarch64-unknown-linux-musl" = "1sb0haqzbw04rm80bwr349ip8gvgvbdifp3biyyxzdf4lh0vk57v";
+    "aarch64-apple-darwin" = "1lbwfl8lc05i96swl342rp5wch4z5mhjvcpak90y0vp7xw8v46c6";
+    "x86_64-apple-darwin" = "01r84aipbqh8xv5zb8075wf2p2ak7bbram34hiqkpy49g5vzw1rc";
+    "x86_64-unknown-linux-musl" = "1n26l1nnnk9f6f8fvcf18xk4my18kx59cqgv72kf75b3653sw0bq";
+    "aarch64-unknown-linux-musl" = "0xishpw1jada2i1c2664ypqa3zrm5bsyn7793gr2yzslpaq4jaw2";
   };
 
   nodeOptionalDepHashes = {
-    "darwin-arm64" = "0c9wrpx28nbinjnfhn59cxy00zf5km5ba828qgbab1r3wx6gz4qi";
-    "darwin-x64" = "1nphmdmmpawd41i82hg1pqxpnsn5l81v11gwpsgh598qg9xps9kl";
-    "linux-x64" = "156y51snpbimxia7v01jnx0418sz27m9p6mmg06r8xdr71vwkvrh";
-    "linux-arm64" = "08imfs24nf5db06n68kgnwazdvppgxby418dysh26777dm6pqvnw";
+    "darwin-arm64" = "1kbpmrzjf0xdgrrna0gz8jv7l0av6wph6x7jx8rb7kkm36z3anlv";
+    "darwin-x64" = "0a9w56bbka3lkpbq8l91gqa03vb0py9h8vzb5bsjrsabzq297dkp";
+    "linux-x64" = "177pnm6d3zzqd0lmhnkkxsz5n0hwq7izs0k494da5vx8v7pryrb2";
+    "linux-arm64" = "1q2wmqwxya3dw350v5vrl264hn1f60rc1z4fa00a12p23irn52h4";
   };
 
   nativeBinaryUrl = "https://github.com/openai/codex/releases/download/rust-v${version}/codex-package-${platform}.tar.zst";
@@ -75,7 +75,7 @@ let
   npmTarball = if runtime == "node" then
     fetchurl {
       url = "https://registry.npmjs.org/@openai/codex/-/codex-${version}.tgz";
-      sha256 = "1d2mclz5vcniz0rsb373mhw8q0d3qisycfp6qb94dd0baqvdnw8s";
+      sha256 = "0c3f4avavamkzwxs5mlf1ycg3c561jx58cfi7mc489rq1pn1gcdg";
     }
   else null;
 
