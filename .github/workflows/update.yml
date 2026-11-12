@@ -17,11 +17,11 @@ jobs:
   check-update:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - uses: actions/checkout@v7.0.1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
 
-    - uses: cachix/install-nix-action@3dc140bfc76c49fbd4dd958429132e3746bcb086 # v31.11.5
+    - uses: cachix/install-nix-action@v31.11.5
       with:
         nix_path: nixpkgs=channel:nixos-unstable
         extra_nix_config: |
@@ -68,7 +68,7 @@ jobs:
     - name: Create Pull Request
       if: steps.check.outputs.update_needed == 'true'
       id: create-pr
-      uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3
+      uses: peter-evans/create-pull-request@v8.1.3
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: "chore: update codex to version ${{ steps.check.outputs.new_version }}"
